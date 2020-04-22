@@ -53,8 +53,8 @@ unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 int real_temperature = 0;
 int setpoint = 30;
-bool pressed_1 = false;
-bool pressed_2 = false;
+//bool pressed_1 = false;
+//bool pressed_2 = false;
 
 //PID variables
 float PID_error = 0;
