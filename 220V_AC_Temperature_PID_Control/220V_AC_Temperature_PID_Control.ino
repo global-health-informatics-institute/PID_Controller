@@ -14,22 +14,16 @@ Weather sensor;
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
 int firing_delay = 9000;
-int maximum_firing_delay = 9000;
+int maximum_firing_delay = firing_delay;
 
-/*Later in the code you will se that the maximum delay after the zero detection
- * is 7400. Why? Well, we know that the 220V AC voltage has a frequency of around 50-60HZ so
- * the period is between 20ms and 16ms, depending on the country. We control the firing
- * delay each half period so each 10ms or 8 ms. To amke sure we wont pass thsoe 10ms, I've made tests
- * and the 7400us or 7.4ms was a good value. Measure your frequency and chande that value later */
+// Max firing delay set to 9ms based on AC frequency of 50Hz
 
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 
-int temp_read_Delay = 1000;
+int temp_read_Delay = 500;
 float real_temperature = 0;
 int setpoint = 45;
-//bool pressed_1 = false;
-//bool pressed_2 = false;
 
 
 //PID variables
@@ -70,9 +64,7 @@ void setup() {
 void loop() 
 {   
   currentMillis = millis();           //Save the value of time before the loop
-   /*  We create this if so we will read the temperature and change values each "temp_read_Delay"
-    *  value. Change that value above iv you want. The MAX6675 read is slow. Tha will affect the
-    *  PID control. I've tried reading the temp each 100ms but it didn't work. With 500ms worked ok.*/
+  // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
     real_temperature = (getTemperature());  //get the real temperature in Celsius degrees
@@ -90,8 +82,8 @@ void loop()
     //We define firing delay range between 0 and 7400. Read above why 7400!!!!!!!
     if(PID_value < 0)      
       PID_value = 0;       
-    if(PID_value > 9000)      
-      PID_value = 9000;    
+    if(PID_value > maximum_firing_delay)      
+      PID_value = maximum_firing_delay;    
     //Printe the values on the LCD
     lcd.clear();
     lcd.setCursor(0,0);
