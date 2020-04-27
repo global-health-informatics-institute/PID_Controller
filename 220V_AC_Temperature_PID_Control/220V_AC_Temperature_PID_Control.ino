@@ -12,8 +12,8 @@ Weather sensor;
 //Variables
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
-int firing_delay = 9000;
-int maximum_firing_delay = firing_delay;
+const int maximum_firing_delay = 9000;
+int firing_delay = maximum_firing_delay;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
@@ -78,7 +78,7 @@ void loop()
       PID_value = 0;       
     if(PID_value > maximum_firing_delay)      
       PID_value = maximum_firing_delay;    
-    //Printe the values on the LCD
+    //Print the values on the LCD
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Set: ");
