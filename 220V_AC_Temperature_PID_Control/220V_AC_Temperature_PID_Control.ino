@@ -3,7 +3,6 @@
 #include <Wire.h> 
 
 //Inputs and outputs
-
 int firing_pin = 32;
 int zero_cross = 33;
 
@@ -15,17 +14,12 @@ int last_CH1_state = 0;
 bool zero_cross_detected = false;
 int firing_delay = 9000;
 int maximum_firing_delay = firing_delay;
-
 // Max firing delay set to 9ms based on AC frequency of 50Hz
-
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
-
 int temp_read_Delay = 500;
 float real_temperature = 0;
 int setpoint = 45;
-
-
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
