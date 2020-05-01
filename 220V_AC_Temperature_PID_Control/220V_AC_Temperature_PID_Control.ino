@@ -62,6 +62,8 @@ void loop()
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
     real_temperature = (getTemperature());  //get the real temperature in Celsius degrees
+    Serial.print(firing_delay);
+    Serial.print(" ");
     Serial.println(getTemperature());
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
@@ -106,7 +108,7 @@ void loop()
 float getTemperature()
 {
   //Measure Temperature from Si7021
-  int tempC = sensor.getTemp();
-  Serial.println(tempC,0);
+  float tempC = sensor.getTemp();
+//  Serial.println(tempC,0);
   return tempC;
 }
