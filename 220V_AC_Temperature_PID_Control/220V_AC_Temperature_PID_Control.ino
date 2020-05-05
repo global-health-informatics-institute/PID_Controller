@@ -1,32 +1,36 @@
 #include <LiquidCrystal_I2C.h>
-#include "SparkFun_Si7021_Breakout_Library.h"
 #include <Wire.h> 
 
 //Inputs and outputs
 int firing_pin = 32;
 int zero_cross = 33;
+const int ADDR = 0x40;
+const int MeasureTemp = 0xE3;
+int X0,X1,temp;
+double X,X_out;
 
 LiquidCrystal_I2C lcd(0x27,20,4);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
-Weather sensor;
+TwoWire I2Cone = TwoWire(0);
+TwoWire I2Ctwo = TwoWire(1);
 
 //Variables
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
 const int maximum_firing_delay = 9000;
-int firing_delay = maximum_firing_delay;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 float real_temperature = 0;
-int setpoint = 45;
+int setpoint = 77;
+int print_firing_delay;
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
 float elapsedTime, Time, timePrev;
 int PID_value = 0;
 //PID constants
-int kp = 203;   int ki= 7.2;   int kd = 1.04;
+int kp = 50;   int ki= 0;   int kd = 0;
 int PID_p = 0;    int PID_i = 0;    int PID_d = 0;
 
 //Zero Crossing Interrupt Function
@@ -50,8 +54,9 @@ void setup() {
   lcd.begin(); //Begin the LCD communication through I2C
   lcd.backlight();  //Turn on backlight for LCD
   //inititalize the I2C the sensor and bing it
-  sensor.begin();
   Serial.begin(9600);
+  I2Cone.begin(21,22,50000); // SDA GPIO33, SCL GPIO32, 50kHz frequency
+  I2Ctwo.begin(2,4,50000); // SDA GPIO19, SCL GPIO18, 50kHz frequency
 }
 
 
@@ -61,10 +66,10 @@ void loop()
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
-    real_temperature = (getTemperature());  //get the real temperature in Celsius degrees
-    Serial.print(firing_delay);
-    Serial.print(" ");
-    Serial.println(getTemperature());
+    real_temperature = (GetTemp(&I2Cone));  //get the real temperature in Celsius degrees
+    Serial.print(",");
+    Serial.print(maximum_firing_delay - PID_value);
+    Serial.println("," + String(real_temperature) + "," + String(GetTemp(&I2Ctwo)));
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
@@ -105,10 +110,20 @@ void loop()
 //End of void loop
 
 //Extracts temperature from the Sensor
-float getTemperature()
+double GetTemp(TwoWire *Sensor)
 {
-  //Measure Temperature from Si7021
-  float tempC = sensor.getTemp();
-//  Serial.println(tempC,0);
-  return tempC;
+  Sensor->beginTransmission(ADDR);
+  Sensor->write(MeasureTemp);
+  Sensor->endTransmission();
+  Sensor->requestFrom(ADDR,2);
+  if(Sensor->available()<=2);{
+    X0 = Sensor->read();
+    X1 = Sensor->read();
+    X0 = X0<<8;
+    X_out = X0+X1;
+  }
+  /**Calculate and display temperature**/
+  X=(175.72*X_out)/65536;
+  X=X-46.85;
+  return X;
 }
