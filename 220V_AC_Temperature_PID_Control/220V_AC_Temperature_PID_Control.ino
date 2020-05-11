@@ -12,9 +12,9 @@ double X,X_out;
 LiquidCrystal_I2C lcd(0x27,16,2);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
 TwoWire I2Cone = TwoWire(0);
 TwoWire I2Ctwo = TwoWire(1);
-TwoWire I2Cthree = TwoWire(3);
-TwoWire I2Cfour = TwoWire(4);
-TwoWire I2Cfive = TwoWire(5);
+TwoWire I2Cthree = TwoWire(2);
+TwoWire I2Cfour = TwoWire(3);
+TwoWire I2Cfive = TwoWire(4);
 
 //Variables
 int last_CH1_state = 0;
