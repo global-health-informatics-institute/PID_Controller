@@ -12,6 +12,9 @@ double X,X_out;
 LiquidCrystal_I2C lcd(0x27,16,2);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
 TwoWire I2Cone = TwoWire(0);
 TwoWire I2Ctwo = TwoWire(1);
+TwoWire I2Cthree = TwoWire(3);
+TwoWire I2Cfour = TwoWire(4);
+TwoWire I2Cfive = TwoWire(5);
 
 //Variables
 int last_CH1_state = 0;
@@ -56,8 +59,10 @@ void setup() {
   //inititalize the I2C the sensor and bing it
   Serial.begin(9600);
   I2Cone.begin(21,22,50000); // SDA GPIO21, SCL GPIO22, 50kHz frequency
-  I2Ctwo.begin(2,4,50000); // SDA GPIO2, 4 GPIO18, 50kHz frequency
-  Serial.println(",FiringDelay,PIDtemp,LowerChamberTemp");
+  I2Ctwo.begin(2,4,50000); // SDA GPIO2, SCL GPIO18, 50kHz frequency
+  I2Cthree.begin(16,17,50000); // SDA GPIO16, SCL GPIO17, 50kHz frequency
+  I2Cfour.begin(5,18,50000); // SDA GPIO5, SCL GPIO18, 50kHz frequency
+  I2Cfive.begin(15,19,50000); // SDA GPIO15, SCL GPIO19, 50kHz frequency
 }
 
 
@@ -70,7 +75,7 @@ void loop()
     real_temperature = (GetTemp(&I2Cone));  //get the real temperature in Celsius degrees
     Serial.print(",");
     Serial.print((maximum_firing_delay - PID_value)/100.0);
-    Serial.println("," + String(real_temperature) + "," + String(GetTemp(&I2Ctwo)));
+    Serial.println("," + String(real_temperature) + "," + String(GetTemp(&I2Ctwo)) + "," + String(GetTemp(&I2Cthree)) + "," + String(GetTemp(&I2Cfour)) + "," + String(GetTemp(&I2Cfive)));
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
