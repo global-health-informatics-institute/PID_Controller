@@ -64,10 +64,7 @@ void loop()
     real_temperature = (GetTemp(15,4));  //get PID Control Temperature
     Serial.print(maximum_firing_delay - PID_value);
     Serial.print("," + String(real_temperature)); 
-    Serial.print("," +String(GetTemp(16,17))); // Hinge Left
-    Serial.print("," +String(GetTemp(18,19))); // Front Left
-    Serial.print("," +String(GetTemp(25,26))); // Hinge Right 
-    Serial.print("," +String(GetTemp(27,14))); // Front Right
+    Serial.print("," +String(GetTemp(18,19))); // Lower Chamber
     Serial.println();      
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
