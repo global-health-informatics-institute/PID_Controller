@@ -20,7 +20,7 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 float real_temperature = 0;
-int setpoint = 75;
+int setpoint = 70;
 int print_firing_delay;
 //PID variables
 float PID_error = 0;
@@ -62,9 +62,9 @@ void loop()
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
     real_temperature = (GetTemp(15,4));  //get PID Control Temperature
-    Serial.print(maximum_firing_delay - PID_value);
+    Serial.print("," + String ((maximum_firing_delay - PID_value)/100.0));
     Serial.print("," + String(real_temperature)); 
-    Serial.print("," +String(GetTemp(18,19))); // Lower Chamber
+    Serial.print("," +String(GetTemp(17,19))); // Lower Chamber
     Serial.println();      
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
@@ -108,7 +108,7 @@ void loop()
 
 //Extracts temperature from the Si7021 Sensor
 double GetTemp(int SDA_Pin, int SLC_pin) {
-  Wire.begin(SDA_Pin,SLC_pin,50000);
+  Wire.begin(SDA_Pin,SLC_pin,5000);
   Wire.beginTransmission(ADDR);
   Wire.write(MeasureTemp);
   Wire.endTransmission();
