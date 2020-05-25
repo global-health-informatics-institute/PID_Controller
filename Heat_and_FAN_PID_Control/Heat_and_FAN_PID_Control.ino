@@ -128,6 +128,11 @@ void loop()
     /**Calculate temperature**/
     X = (175.72 * X_out) / 65536;
     Outer_Temp = X - 46.85;
+
+    //Time Tracking
+    timePrev = Time;                    // the previous time is stored before the actual time read
+    Time = millis();                    // actual time read
+    elapsedTime = (Time - timePrev) / 1000;   
     
     // Element PID Control
     real_temperature = Outer_Temp;  //get Element PID Control Temperature
@@ -138,27 +143,13 @@ void loop()
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
     PID_i = PID_i + (ki * PID_error);               //Calculate the I value
-    timePrev = Time;                    // the previous time is stored before the actual time read
-    Time = millis();                    // actual time read
-    elapsedTime = (Time - timePrev) / 1000;   
     PID_d = kd*((PID_error - previous_error)/elapsedTime); //Calculate the D value
     PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
-    //We define firing delay range between 0 and 7400. Read above why 7400!!!!!!!
+    //We define firing delay range between 0 and 9000.
     if(PID_value < 0)      
       PID_value = 0;       
     if(PID_value > maximum_firing_delay)      
-      PID_value = maximum_firing_delay;    
-    //Print the values on the LCD
-    Wire.begin(21,22,50000);
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Set: ");
-    lcd.setCursor(5,0);
-    lcd.print(setpoint);
-    lcd.setCursor(0,1);
-    lcd.print("Real temp: ");
-    lcd.setCursor(11,1);
-    lcd.print(real_temperature);    
+      PID_value = maximum_firing_delay;        
     previous_error = PID_error; //Remember to store the previous error.
 
     //FAN PID Control
@@ -174,10 +165,7 @@ void loop()
     if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       FAN_PID_i = 0;
     FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
-    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value
-    timePrev = Time;                    // the previous time is stored before the actual time read
-    Time = millis();                    // actual time read
-    elapsedTime = (Time - timePrev) / 1000;   
+    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
     FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
     FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
     if(FAN_PID_value < 0)      
@@ -187,12 +175,23 @@ void loop()
     FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
     TempRequestSent = false;  // THIS IS REQUIRED
     //end new FAN PID code    
-
-
+    
     /*  MAP FAN_PID_value to a FanSpeed  */
     FanSpeed = 25; //((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11;   this value will always be between 11 AND 25
+    
+    //Print the values on the LCD
+    Wire.begin(21,22,50000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Set: ");
+    lcd.setCursor(5,0);
+    lcd.print(setpoint);
+    lcd.setCursor(0,1);
+    lcd.print("Real temp: ");
+    lcd.setCursor(11,1);
+    lcd.print(real_temperature);
   }
-
+  
   //If the zero cross interruption was detected we create the 100us firing pulse  
   if (zero_cross_detected){
     zero_cross_detected = false;
@@ -214,7 +213,7 @@ void loop()
          digitalWrite(FAN_firing_pin, HIGH);
       } 
     }
-    delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
+    delayMicroseconds(7500); //This delay controls the power // maximum_firing_delay - PID_value
     digitalWrite(ELEMENT_firing_pin,HIGH);
     delayMicroseconds(100);
     digitalWrite(ELEMENT_firing_pin,LOW);
