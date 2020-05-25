@@ -38,7 +38,7 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 float real_temperature = 0;
-int setpoint = 70;
+int setpoint = 65;
 int print_firing_delay;
 //PID variables
 float PID_error = 0;
