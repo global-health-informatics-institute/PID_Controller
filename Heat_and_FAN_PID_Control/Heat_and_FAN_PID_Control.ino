@@ -197,12 +197,7 @@ void loop()
 
   //If the zero cross interruption was detected we create the 100us firing pulse  
   if (zero_cross_detected){
-      zero_cross_detected = false;
-      delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
-      digitalWrite(ELEMENT_firing_pin,HIGH);
-      delayMicroseconds(100);
-      digitalWrite(ELEMENT_firing_pin,LOW);
-
+    zero_cross_detected = false;
     if (FanOn == true) {
       if (FanCyclesOn > 0)
         FanCyclesOn -= 1;
@@ -221,6 +216,10 @@ void loop()
          digitalWrite(FAN_firing_pin, HIGH);
       } 
     }
+    delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
+    digitalWrite(ELEMENT_firing_pin,HIGH);
+    delayMicroseconds(100);
+    digitalWrite(ELEMENT_firing_pin,LOW);
   } 
 }
 //End of void loop
