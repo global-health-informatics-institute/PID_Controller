@@ -93,8 +93,7 @@ void setup()
 void loop() 
 {   
   currentMillis = millis();           //Save the value of time before the loop
-
-    // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
+  // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
   if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
      Wire.beginTransmission(ADDR);
      Wire.write(MeasureTemp);
@@ -108,8 +107,7 @@ void loop()
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
-    
-        Wire.requestFrom(ADDR, 2);
+    Wire.requestFrom(ADDR, 2);
     if (Wire.available() <= 2); {
       X0 = Wire.read();
       X1 = Wire.read();
@@ -130,7 +128,7 @@ void loop()
     /**Calculate temperature**/
     X = (175.72 * X_out) / 65536;
     Outer_Temp = X - 46.85;
-
+    
     // Element PID Control
     real_temperature = Outer_Temp;  //get Element PID Control Temperature
     Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
