@@ -86,8 +86,8 @@ void setup()
   pinMode (ELEMENT_firing_pin, OUTPUT);
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
-  Wire.begin(16, 17, 50000);  //Inner sensor
-  Wire1.begin(18, 19, 50000);  //Outer sensor
+  Wire.begin(18, 19, 50000);  //Inner sensor
+  Wire1.begin(16, 17, 50000);  //Outer sensor
 }
 
 void loop() 
@@ -180,16 +180,16 @@ void loop()
     FanSpeed = 25; //((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11;   this value will always be between 11 AND 25
     
     //Print the values on the LCD
-    Wire.begin(21,22,50000);
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Set: ");
-    lcd.setCursor(5,0);
-    lcd.print(setpoint);
-    lcd.setCursor(0,1);
-    lcd.print("Real temp: ");
-    lcd.setCursor(11,1);
-    lcd.print(real_temperature);
+//    Wire.begin(21,22,50000);
+//    lcd.clear();
+//    lcd.setCursor(0,0);
+//    lcd.print("Set: ");
+//    lcd.setCursor(5,0);
+//    lcd.print(setpoint);
+//    lcd.setCursor(0,1);
+//    lcd.print("Real temp: ");
+//    lcd.setCursor(11,1);
+//    lcd.print(real_temperature);
   }
   
   //If the zero cross interruption was detected we create the 100us firing pulse  
