@@ -3,7 +3,7 @@
 
 //Inputs and outputs
 int firing_pin = 33;
-int zero_cross = 25;
+int zero_cross = 35;
 const int ADDR = 0x40;
 const int MeasureTemp = 0xE3;
 int X0,X1,temp;
@@ -20,7 +20,7 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 float real_temperature = 0;
-int setpoint = 75;
+int setpoint = 65;
 int print_firing_delay;
 //PID variables
 float PID_error = 0;
@@ -61,10 +61,10 @@ void loop()
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
-    real_temperature = (GetTemp(17,16));  //get PID Control Temperature
+    real_temperature = (GetTemp(16,17));  //get PID Control Temperature // Outer Sensor
     Serial.print("," + String ((maximum_firing_delay - PID_value)/100.0));
     Serial.print("," + String(real_temperature)); 
-    Serial.print("," +String(GetTemp(18,19))); // Lower Chamber
+    Serial.print("," +String(GetTemp(18,19))); // Lower Chamber //Inner Sensor
     Serial.println();      
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
