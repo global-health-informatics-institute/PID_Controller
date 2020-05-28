@@ -18,8 +18,8 @@ extern TwoWire Wire1; //// THIS IS NEW
  */
 
 //Inputs and outputs
-gpio_num_t ELEMENT_firing_pin = GPIO_NUM_32; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
-gpio_num_t FAN_firing_pin = GPIO_NUM_33; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
+gpio_num_t ELEMENT_firing_pin = GPIO_NUM_33; // THIS IS FOR THE ELEMENT TRIAC AS PER PCB LAYOUT
+gpio_num_t FAN_firing_pin = GPIO_NUM_32; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
 const int ADDR = 0x40;
@@ -72,9 +72,9 @@ double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors
 //Zero Crossing Interrupt Function
 void IRAM_ATTR zero_crossing()
 {
-  delayMicroseconds(10);
-  if (gpio_get_level(zero_cross))
-     zero_cross_detected = true; 
+ delayMicroseconds(10);
+ if (gpio_get_level(zero_cross))
+    zero_cross_detected = true; 
 }
 
 void setup() 
@@ -135,9 +135,7 @@ void loop()
     elapsedTime = (Time - timePrev) / 1000;   
     
     // Element PID Control
-    real_temperature = Outer_Temp;  //get Element PID Control Temperature
-    Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
-    Serial.print(", Heat Control Temp=" + String(real_temperature));    
+    real_temperature = Inner_Temp;  //get Element PID Control Temperature : NOW COntrolled by Inner Temperature for testing
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
@@ -153,14 +151,7 @@ void loop()
     previous_error = PID_error; //Remember to store the previous error.
 
     //FAN PID Control
-    FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of oven
-    // Print the firing delay and the temps of the five locations so we can graph them
-    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
-    Serial.print(", Fan Speed =" + String(FanSpeed));     
-    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
-    Serial.print(", Inner=" + String(Inner_Temp));
-    Serial.print(", Outer=" + String(Outer_Temp));
-    Serial.println();
+    FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
 
     if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       FAN_PID_i = 0;
@@ -176,9 +167,9 @@ void loop()
     TempRequestSent = false;  // THIS IS REQUIRED
     //end new FAN PID code    
     
-    /*  MAP FAN_PID_value to a FanSpeed  */
-    FanSpeed = 25; //((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11;   this value will always be between 11 AND 25
-    
+//     MAP FAN_PID_value to a FanSpeed  
+    FanSpeed = ((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
+ 
     //Print the values on the LCD
 //    Wire.begin(21,22,50000);
 //    lcd.clear();
@@ -190,6 +181,19 @@ void loop()
 //    lcd.print("Real temp: ");
 //    lcd.setCursor(11,1);
 //    lcd.print(real_temperature);
+   TempRequestSent = false;  // THIS IS REQUIRED
+   
+       // Print the firing delay and the temps of the locations so we can graph them
+    Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
+    Serial.print(", Heat Control Temp=" + String(real_temperature)); 
+    Serial.print(", Inner Temp=" + String(Inner_Temp )); 
+    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
+    Serial.print(", Fan Speed =" + String(FanSpeed));     
+    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
+    Serial.println();
+//    Serial.print(", Inner=" + String(Inner_Temp));
+//    Serial.print(", Outer=" + String(Outer_Temp));
+
   }
   
   //If the zero cross interruption was detected we create the 100us firing pulse  
@@ -213,7 +217,7 @@ void loop()
          digitalWrite(FAN_firing_pin, HIGH);
       } 
     }
-    delayMicroseconds(7500); //This delay controls the power // maximum_firing_delay - PID_value
+    delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
     digitalWrite(ELEMENT_firing_pin,HIGH);
     delayMicroseconds(100);
     digitalWrite(ELEMENT_firing_pin,LOW);
