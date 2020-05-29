@@ -27,7 +27,7 @@ const int MeasureTemp = 0xE3;
 int X0,X1,temp;
 double X,X_out;
 
-LiquidCrystal_I2C lcd(0x27,20,4);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
+//LiquidCrystal_I2C lcd(0x27,20,4);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
 
 //Variables
 int last_CH1_state = 0;
@@ -67,7 +67,7 @@ int FAN_kp = 500;   int FAN_ki = 1;     int FAN_kd = 1000;
 int FAN_PID_p = 0;   int FAN_PID_i = 0;  int FAN_PID_d = 0;
 
 //OVEN Temp values
-double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors we will use for PID control.
+double Outer_Temp, Inner_Temp; // These hold the values of the two temp sensors we will use for PID control.
 
 //Zero Crossing Interrupt Function
 void IRAM_ATTR zero_crossing()
@@ -77,65 +77,89 @@ void IRAM_ATTR zero_crossing()
     zero_cross_detected = true; 
 }
 
+double GetTemp(int SDA_Pin, int SLC_pin) {
+  Wire.begin(SDA_Pin,SLC_pin,10000);
+  Wire.beginTransmission(ADDR);
+  Wire.write(MeasureTemp);
+  Wire.endTransmission();
+  Wire.requestFrom(ADDR,2);
+  if(Wire.available()<=2);{
+    X0 = Wire.read();
+    X1 = Wire.read();
+    X0 = X0<<8;
+    X_out = X0+X1;
+  }
+  /**Calculate temperature**/
+  X=(175.72*X_out)/65536;
+  X=X-46.85;
+  return X;
+}
+
 void setup() 
 {
   Serial.begin(9600);
-  lcd.begin(); //Begin the LCD communication through I2C
-  lcd.backlight();  //Turn on backlight for LCD
+//  lcd.begin(); //Begin the LCD communication through I2C
+//  lcd.backlight();  //Turn on backlight for LCD
   pinMode (FAN_firing_pin, OUTPUT);
   pinMode (ELEMENT_firing_pin, OUTPUT);
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
-  Wire.begin(18, 19, 50000);  //Inner sensor
-  Wire1.begin(16, 17, 50000);  //Outer sensor
+//  Wire.begin(18, 19, 50000);  //Inner sensor
+//  Wire1.begin(16, 17, 50000);  //Outer sensor
+//  Wire2.begin(21, 22, 50000);  //Element_PID sensor
+
+
 }
 
 void loop() 
 {   
   currentMillis = millis();           //Save the value of time before the loop
-  // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
-  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
-     Wire.beginTransmission(ADDR);
-     Wire.write(MeasureTemp);
-     Wire.endTransmission();
-     Wire1.beginTransmission(ADDR);
-     Wire1.write(MeasureTemp);
-     Wire1.endTransmission();
-     TempRequestSent = true;
-  }
-  
+//  // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
+//  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
+//     Wire.beginTransmission(ADDR);
+//     Wire.write(MeasureTemp);
+//     Wire.endTransmission();
+//     Wire1.beginTransmission(ADDR);
+//     Wire1.write(MeasureTemp);
+//     Wire1.endTransmission();
+//     TempRequestSent = true;
+//  }
+//  
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMillis - previousMillis >= temp_read_Delay){
     previousMillis += temp_read_Delay;              //Increase the previous time for next loop
-    Wire.requestFrom(ADDR, 2);
-    if (Wire.available() <= 2); {
-      X0 = Wire.read();
-      X1 = Wire.read();
-      X0 = X0 << 8;
-      X_out = X0 + X1;
-    }
-    /**Calculate temperature**/
-    X = (175.72 * X_out) / 65536;
-    Inner_Temp = X - 46.85;
+//    Wire.requestFrom(ADDR, 2);
+//    if (Wire.available() <= 2); {
+//      X0 = Wire.read();
+//      X1 = Wire.read();
+//      X0 = X0 << 8;
+//      X_out = X0 + X1;
+//    }
+//    /**Calculate temperature**/
+//    X = (175.72 * X_out) / 65536;
+//    Inner_Temp = X - 46.85;
+//
+//    Wire1.requestFrom(ADDR, 2);
+//    if (Wire1.available() <= 2); {
+//      X0 = Wire1.read();
+//      X1 = Wire1.read();
+//      X0 = X0 << 8;
+//      X_out = X0 + X1;
+//    }
+//    /**Calculate temperature**/
+//    X = (175.72 * X_out) / 65536;
+//    Outer_Temp = X - 46.85;
 
-    Wire1.requestFrom(ADDR, 2);
-    if (Wire1.available() <= 2); {
-      X0 = Wire1.read();
-      X1 = Wire1.read();
-      X0 = X0 << 8;
-      X_out = X0 + X1;
-    }
-    /**Calculate temperature**/
-    X = (175.72 * X_out) / 65536;
-    Outer_Temp = X - 46.85;
-
+    Inner_Temp = GetTemp(18, 19);
+    Outer_Temp = GetTemp(16, 17);
+    
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
     Time = millis();                    // actual time read
     elapsedTime = (Time - timePrev) / 1000;   
     
     // Element PID Control
-    real_temperature = Inner_Temp;  //get Element PID Control Temperature : NOW COntrolled by Inner Temperature for testing
+    real_temperature = GetTemp(21, 22);  //get Element PID Control Temperature : NOW COntrolled by Inner Temperature for testing
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
@@ -186,7 +210,8 @@ void loop()
        // Print the firing delay and the temps of the locations so we can graph them
     Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
     Serial.print(", Heat Control Temp=" + String(real_temperature)); 
-    Serial.print(", Inner Temp=" + String(Inner_Temp )); 
+    Serial.print(", Inner Temp=" + String(Inner_Temp ));
+    Serial.print(", Outer Temp=" + String(Outer_Temp )); 
     Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
     Serial.print(", Fan Speed =" + String(FanSpeed));     
     Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
