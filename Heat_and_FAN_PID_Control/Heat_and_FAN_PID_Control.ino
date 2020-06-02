@@ -67,7 +67,10 @@ int FAN_kp = 500;   int FAN_ki = 1;     int FAN_kd = 1000;
 int FAN_PID_p = 0;   int FAN_PID_i = 0;  int FAN_PID_d = 0;
 
 //OVEN Temp values
-double Outer_Temp, Inner_Temp; // These hold the values of the two temp sensors we will use for PID control.
+double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
+double Old_Inner_Temp = 0.00;
+double Old_Outer_Temp = 0.00;
+double Old_Real_Temp = 0.00; // 
 
 //Zero Crossing Interrupt Function
 void IRAM_ATTR zero_crossing()
@@ -150,8 +153,35 @@ void loop()
 //    X = (175.72 * X_out) / 65536;
 //    Outer_Temp = X - 46.85;
 
-    Inner_Temp = GetTemp(18, 19);
+    Inner_Temp = GetTemp(18, 19);  
+    if(Old_Inner_Temp == 0.00){
+      Old_Inner_Temp = Inner_Temp;
+    } else{
+        if((Inner_Temp - Old_Inner_Temp) > 5)
+          Inner_Temp = Old_Inner_Temp;
+        else
+          Old_Inner_Temp = Inner_Temp;
+      }
+        
     Outer_Temp = GetTemp(16, 17);
+    if(Old_Outer_Temp == 0.00){
+      Old_Outer_Temp = Outer_Temp;
+    } else{
+        if((Outer_Temp - Old_Outer_Temp) > 5)
+          Outer_Temp = Old_Outer_Temp;
+        else
+          Old_Outer_Temp = Outer_Temp;
+      }
+
+    real_temperature = GetTemp(21, 22);  //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    if(Old_Real_Temp == 0.00){
+      Old_Real_Temp = real_temperature;
+    } else{
+        if((real_temperature - Old_Real_Temp) > 5)
+          real_temperature = Old_Real_Temp;
+        else
+          Old_Real_Temp = real_temperature;
+      }
     
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
@@ -159,7 +189,7 @@ void loop()
     elapsedTime = (Time - timePrev) / 1000;   
     
     // Element PID Control
-    real_temperature = GetTemp(21, 22);  //get Element PID Control Temperature : NOW COntrolled by Inner Temperature for testing
+
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
