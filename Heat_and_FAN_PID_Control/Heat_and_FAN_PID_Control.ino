@@ -173,7 +173,7 @@ void loop()
           Old_Outer_Temp = Outer_Temp;
       }
 
-    real_temperature = GetTemp(21, 22);  //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    real_temperature = GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
@@ -187,7 +187,7 @@ void loop()
     timePrev = Time;                    // the previous time is stored before the actual time read
     Time = millis();                    // actual time read
     elapsedTime = (Time - timePrev) / 1000;   
-    
+        
     // Element PID Control
 
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
