@@ -37,7 +37,6 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-float real_temperature = 0;
 int setpoint = 65;
 int print_firing_delay;
 //PID variables
@@ -68,6 +67,7 @@ int FAN_PID_p = 0;   int FAN_PID_i = 0;  int FAN_PID_d = 0;
 
 //OVEN Temp values
 double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
+double real_temperature = 0.00;
 double Old_Inner_Temp = 0.00;
 double Old_Outer_Temp = 0.00;
 double Old_Real_Temp = 0.00; // 
@@ -153,11 +153,13 @@ void loop()
 //    X = (175.72 * X_out) / 65536;
 //    Outer_Temp = X - 46.85;
 
+    //Geting Inner Temperature by checking Difference of  pr
     Inner_Temp = GetTemp(18, 19);  
+    
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
     } else{
-        if((Inner_Temp - Old_Inner_Temp) > 5)
+        if((abs(Inner_Temp - Old_Inner_Temp)) > 5.00)
           Inner_Temp = Old_Inner_Temp;
         else
           Old_Inner_Temp = Inner_Temp;
@@ -167,7 +169,7 @@ void loop()
     if(Old_Outer_Temp == 0.00){
       Old_Outer_Temp = Outer_Temp;
     } else{
-        if((Outer_Temp - Old_Outer_Temp) > 5)
+        if((abs(Outer_Temp - Old_Outer_Temp)) > 5.00)
           Outer_Temp = Old_Outer_Temp;
         else
           Old_Outer_Temp = Outer_Temp;
@@ -177,7 +179,7 @@ void loop()
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
-        if((real_temperature - Old_Real_Temp) > 5)
+        if((abs(real_temperature - Old_Real_Temp)) > 5.00)
           real_temperature = Old_Real_Temp;
         else
           Old_Real_Temp = real_temperature;
