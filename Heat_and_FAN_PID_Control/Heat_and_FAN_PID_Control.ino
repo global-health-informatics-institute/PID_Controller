@@ -203,7 +203,10 @@ void loop()
     if(PID_value < 0)      
       PID_value = 0;       
     if(PID_value > maximum_firing_delay)      
-      PID_value = maximum_firing_delay;        
+      PID_value = maximum_firing_delay; 
+    //THIS IS NEW to avoid overheating  
+    if(Outer_Temp > 110.00) 
+      PID_value = 2000;    
     previous_error = PID_error; //Remember to store the previous error.
 
     //FAN PID Control
