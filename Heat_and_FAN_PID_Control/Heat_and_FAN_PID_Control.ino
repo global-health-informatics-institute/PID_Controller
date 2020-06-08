@@ -196,9 +196,10 @@ void loop()
     if (real_temperature < (setpoint-1)){
        PID_error = 110 - Outer_Temp;
     }
-    else
+    else{
        previous_error = 0;
        PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+    }
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
