@@ -192,7 +192,11 @@ void loop()
         
     // Element PID Control
 
-    PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+    //This Is New to avoid Over Heating and Smoothen Graph 
+    if (real_temperature < (setpoint-3))
+       PID_error = 110 - Outer_Temp;
+    else
+       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
@@ -204,9 +208,6 @@ void loop()
       PID_value = 0;       
     if(PID_value > maximum_firing_delay)      
       PID_value = maximum_firing_delay; 
-    //THIS IS NEW to avoid overheating  
-    if(Outer_Temp > 110.00) 
-      PID_value = 2000;    
     previous_error = PID_error; //Remember to store the previous error.
 
     //FAN PID Control
