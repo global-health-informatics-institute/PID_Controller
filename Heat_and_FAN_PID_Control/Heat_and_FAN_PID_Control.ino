@@ -37,16 +37,16 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-int setpoint = 65;
+int setpoint = 75;
 int print_firing_delay;
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
 float elapsedTime, Time, timePrev;
-int PID_value = 0;
+float PID_value = 0;
 //PID constants
-int kp = 1800;   int ki= 1.2;   int kd = 30000;
-int PID_p = 0;    int PID_i = 0;    int PID_d = 0;
+int kp = 2500;   float ki= 1.41;   int kd = 50000;
+int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
 int FanSpeed = 25;
@@ -193,12 +193,14 @@ void loop()
     // Element PID Control
 
     //This Is New to avoid Over Heating and Smoothen Graph 
-    if (real_temperature < setpoint)
-       PID_error = 110 - Outer_Temp;    
-    else{
-       previous_error = 0;
-       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
-    }
+//    if (real_temperature < setpoint)
+//       PID_error = 110 - Outer_Temp;    
+//    else{
+//       previous_error = 0;
+//       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+//    }
+
+    PID_error = setpoint - real_temperature;  
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
@@ -253,6 +255,7 @@ void loop()
     Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
     Serial.print(", Fan Speed =" + String(FanSpeed));     
     Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
+    Serial.print(", Set Point =" + String(setpoint));
     Serial.println();
 //    Serial.print(", Inner=" + String(Inner_Temp));
 //    Serial.print(", Outer=" + String(Outer_Temp));
