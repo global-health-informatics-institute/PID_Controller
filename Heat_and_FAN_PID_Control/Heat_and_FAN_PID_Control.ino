@@ -37,7 +37,7 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-int setpoint = 95;
+int setpoint = 65;
 int print_firing_delay;
 //PID variables
 float PID_error = 0;
@@ -45,7 +45,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp = 2500;   float ki= 1.3;   int kd = 50000;
+int kp =1400;   float ki= 23.3;   int kd = 56000;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -232,7 +232,7 @@ void loop()
     //end new FAN PID code    
     
 //     MAP FAN_PID_value to a FanSpeed  
-    FanSpeed = ((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
+    FanSpeed = 25;//((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
  
     //Print the values on the LCD
 //    Wire.begin(21,22,50000);
