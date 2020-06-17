@@ -40,14 +40,14 @@ int temp_read_Delay = 500;
 int setpoint = 65;
 int print_firing_delay;
 int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
-double LastTenPID_d[] = {0,0,0,0,0,0,0,0,0,0}; // An Array for the values
+double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =1400;   float ki= 0.55;   int kd = 56000;
+int kp =1400;   float ki= 0.65;   int kd = 56000;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -104,10 +104,10 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
 double PID_dArrayAverage()
 {
     double S=0;
-  for (int i=0; i<10; i++) {
-    S = S+LastTenPID_d[i];
+  for (int i=0; i<20; i++) {
+    S = S+LastTwentyPID_d[i];
   }
-  return S/10;
+  return S/20;
 
 }
 
@@ -220,9 +220,9 @@ void loop()
     PID_i = PID_i + (ki * PID_error);               //Calculate the I value
 
     //THIS NEW //Calculate the D value 
-    LastTenPID_d[PID_dArrayIndex] = kd*((PID_error - previous_error)/elapsedTime); //Calculate the D value
+    LastTwentyPID_d[PID_dArrayIndex] = kd*((PID_error - previous_error)/elapsedTime); //Calculate the D value
     PID_d = PID_dArrayAverage();
-    PID_dArrayIndex = (PID_dArrayIndex + 1) % 10;
+    PID_dArrayIndex = (PID_dArrayIndex + 1) % 20;
     
   //    PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
     PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
