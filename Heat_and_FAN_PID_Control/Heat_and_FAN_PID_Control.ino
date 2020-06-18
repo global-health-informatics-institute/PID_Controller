@@ -37,7 +37,7 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-int setpoint = 65;
+int setpoint = 95;
 int print_firing_delay;
 int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
@@ -47,7 +47,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =1400;   float ki= 0.65;   int kd = 56000;
+int kp =1400;   float ki= 0.55;   int kd = 75000;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -101,14 +101,16 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
 }
 
 //This Is New
-double PID_dArrayAverage()
-{
-    double S=0;
+double PID_dArrayAverage() {
+  double S=0;
+  int Values = 0;
   for (int i=0; i<20; i++) {
-    S = S+LastTwentyPID_d[i];
+    if (LastTwentyPID_d[i] > 0 ){
+      S = S+LastTwentyPID_d[i];
+      Values++;
+    }   
   }
-  return S/20;
-
+  return S/Values;
 }
 
 void setup() 
