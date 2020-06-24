@@ -47,7 +47,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =1400;   float ki= 0.55;   int kd = 75000;
+int kp =2300;   float ki= 0.6;   int kd = 75000;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -105,17 +105,20 @@ double PID_dArrayAverage() {
   double S=0;
   int Values = 0;
   for (int i=0; i<20; i++) {
-    if (LastTwentyPID_d[i] > 0 ){
+    if (LastTwentyPID_d[i] != 0 ){
       S = S+LastTwentyPID_d[i];
       Values++;
     }   
   }
-  return S/Values;
+  if (Values > 0)
+    return S/Values;
+  else
+   return 0;
 }
 
 void setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
 //  lcd.begin(); //Begin the LCD communication through I2C
 //  lcd.backlight();  //Turn on backlight for LCD
   pinMode (FAN_firing_pin, OUTPUT);
@@ -280,6 +283,10 @@ void loop()
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
     Serial.print(", PID_d=" + String(PID_d)); 
+    Serial.print (", "+ String(PID_dArrayIndex));
+    for (int i=0; i<20; i++) {
+     Serial.print(", " + String(LastTwentyPID_d[i]));
+    }
     Serial.println();
 //    Serial.print(", Inner=" + String(Inner_Temp));
 //    Serial.print(", Outer=" + String(Outer_Temp));
