@@ -40,15 +40,15 @@ unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
 int setpoint = 95;
 int print_firing_delay;
-int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
-double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
+//int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
+//double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =2300;   float ki= 0;   int kd = 0;
+int kp =2000;   float ki= 0;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -102,21 +102,21 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
   return X;
 }
 
-//This Is New
-double PID_dArrayAverage() {
-  double S=0;
-  int Values = 0;
-  for (int i=0; i<20; i++) {
-    if (LastTwentyPID_d[i] != 0 ){
-      S = S+LastTwentyPID_d[i];
-      Values++;
-    }   
-  }
-  if (Values > 0)
-    return S/Values;
-  else
-   return 0;
-}
+////This Is New
+//double PID_dArrayAverage() {
+//  double S=0;
+//  int Values = 0;
+//  for (int i=0; i<20; i++) {
+//    if (LastTwentyPID_d[i] != 0 ){
+//      S = S+LastTwentyPID_d[i];
+//      Values++;
+//    }   
+//  }
+//  if (Values > 0)
+//    return S/Values;
+//  else
+//   return 0;
+//}
 
 void setup() 
 {
@@ -227,9 +227,7 @@ void loop()
    PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + previous_error);              //Calculate the I value
 
     //THIS NEW //Calculate the D value 
-    LastTwentyPID_d[PID_dArrayIndex] = kd*((PID_error - previous_error)/elapsedTime); //Calculate the D value
-    PID_d = PID_dArrayAverage();
-    PID_dArrayIndex = (PID_dArrayIndex + 1) % 20;
+   PID_d = -(2.0f*kd*(real_temperature-prev_real_temperature) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     
   //    PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
     PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
@@ -285,10 +283,10 @@ void loop()
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
     Serial.print(", PID_d=" + String(PID_d)); 
-    Serial.print (", "+ String(PID_dArrayIndex));
-    for (int i=0; i<20; i++) {
-     Serial.print(", " + String(LastTwentyPID_d[i]));
-    }
+//    Serial.print (", "+ String(PID_dArrayIndex));
+//    for (int i=0; i<20; i++) {
+////     Serial.print(", " + String(LastTwentyPID_d[i]));
+//    }
     Serial.println();
 //This is new
   prev_real_temperature = real_temperature;
