@@ -1,4 +1,4 @@
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 #include <Wire.h> 
 extern TwoWire Wire1; //// THIS IS NEW
 
@@ -30,6 +30,7 @@ double X,X_out;
 //LiquidCrystal_I2C lcd(0x27,20,4);  //sometimes the adress is not 0x27. Change to 0x3f if it dosn't work.
 
 //Variables
+float tau = 0.02;
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
 const int maximum_firing_delay = 9000;
@@ -37,7 +38,7 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-int setpoint = 75;
+int setpoint = 95;
 int print_firing_delay;
 int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
@@ -47,7 +48,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =2300;   float ki= 0.6;   int kd = 0;
+int kp =2300;   float ki= 0;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -60,7 +61,7 @@ int FAN_firing_delay = 0;  // Initialize this to ZERO and we will adjust for dif
 //FAN PID variables
 float FAN_PID_error = 0;
 float FAN_previous_error = 0;
-int FAN_PID_value = 0; 
+int FAN_PID_value = 0;
 int FAN_maximum_firing_delay = 7000; //TESTING THIS VALUE
 
 //FAN PID constants
@@ -72,7 +73,8 @@ double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors
 double real_temperature = 0.00;
 double Old_Inner_Temp = 0.00;
 double Old_Outer_Temp = 0.00;
-double Old_Real_Temp = 0.00; // 
+double Old_Real_Temp = 0.00; 
+double prev_real_temperature; //record previous measurement
 
 //Zero Crossing Interrupt Function
 void IRAM_ATTR zero_crossing()
@@ -222,8 +224,7 @@ void loop()
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
-    PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + previous_error);//Calculate the I value
-    //PID_i = PID_i + (ki * PID_error);               //Calculate the I value
+   PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + previous_error);              //Calculate the I value
 
     //THIS NEW //Calculate the D value 
     LastTwentyPID_d[PID_dArrayIndex] = kd*((PID_error - previous_error)/elapsedTime); //Calculate the D value
@@ -289,8 +290,8 @@ void loop()
      Serial.print(", " + String(LastTwentyPID_d[i]));
     }
     Serial.println();
-//    Serial.print(", Inner=" + String(Inner_Temp));
-//    Serial.print(", Outer=" + String(Outer_Temp));
+//This is new
+  prev_real_temperature = real_temperature;
 
   }
   
