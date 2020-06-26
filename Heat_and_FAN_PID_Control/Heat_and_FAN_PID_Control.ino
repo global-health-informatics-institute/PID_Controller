@@ -48,7 +48,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =2000;   float ki= 0;   int kd = 0;
+int kp =1000;   float ki= 1.2;   int kd = 75000;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -276,8 +276,8 @@ void loop()
     Serial.print(", Heat Control Temp=" + String(real_temperature)); 
     Serial.print(", Inner Temp=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
-    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
-    Serial.print(", Fan Speed =" + String(FanSpeed));     
+//    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
+//    Serial.print(", Fan Speed =" + String(FanSpeed));     
     Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
