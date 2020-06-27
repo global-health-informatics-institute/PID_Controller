@@ -130,6 +130,7 @@ void setup()
 //  Wire.begin(18, 19, 50000);  //Inner sensor
 //  Wire1.begin(16, 17, 50000);  //Outer sensor
 //  Wire2.begin(21, 22, 50000);  //Element_PID sensor
+  digitalWrite(FAN_firing_pin, HIGH);
 
 
 }
@@ -238,25 +239,25 @@ void loop()
       PID_value = maximum_firing_delay; 
     previous_error = PID_error; //Remember to store the previous error.
 
-    //FAN PID Control
-    FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
-
-    if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-      FAN_PID_i = 0;
-    FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
-    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
-    FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
-    FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
-    if(FAN_PID_value < 0)      
-      FAN_PID_value = 0;       
-    if(FAN_PID_value > FAN_maximum_firing_delay)      
-      FAN_PID_value = FAN_maximum_firing_delay;    
-    FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
-    TempRequestSent = false;  // THIS IS REQUIRED
-    //end new FAN PID code    
+//    //FAN PID Control
+//    FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
+//
+//    if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
+//      FAN_PID_i = 0;
+//    FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
+//    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
+//    FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
+//    FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
+//    if(FAN_PID_value < 0)      
+//      FAN_PID_value = 0;       
+//    if(FAN_PID_value > FAN_maximum_firing_delay)      
+//      FAN_PID_value = FAN_maximum_firing_delay;    
+//    FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
+//    TempRequestSent = false;  // THIS IS REQUIRED
+//    //end new FAN PID code    
     
 //     MAP FAN_PID_value to a FanSpeed  
-    FanSpeed = 25;//((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
+//    FanSpeed = 25;//((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
  
     //Print the values on the LCD
 //    Wire.begin(21,22,50000);
@@ -278,7 +279,7 @@ void loop()
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
 //    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
 //    Serial.print(", Fan Speed =" + String(FanSpeed));     
-    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
+//    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
@@ -297,24 +298,24 @@ void loop()
   //If the zero cross interruption was detected we create the 100us firing pulse  
   if (zero_cross_detected){
     zero_cross_detected = false;
-    if (FanOn == true) {
-      if (FanCyclesOn > 0)
-        FanCyclesOn -= 1;
-      else {
-        FanOn = false;
-        FanCyclesOff = 25 - FanSpeed;
-        digitalWrite(FAN_firing_pin, LOW);          
-      }
-    }  
-    else {
-      if (FanCyclesOff > 0)
-         FanCyclesOff -= 1;
-      else {
-         FanOn = true;
-         FanCyclesOn = FanSpeed;
-         digitalWrite(FAN_firing_pin, HIGH);
-      } 
-    }
+//    if (FanOn == true) {
+//      if (FanCyclesOn > 0)
+//        FanCyclesOn -= 1;
+//      else {
+//        FanOn = false;
+//        FanCyclesOff = 25 - FanSpeed;
+//        digitalWrite(FAN_firing_pin, LOW);          
+//      }
+//    }  
+//    else {
+//      if (FanCyclesOff > 0)
+//         FanCyclesOff -= 1;
+//      else {
+//         FanOn = true;
+//         FanCyclesOn = FanSpeed;
+//         digitalWrite(FAN_firing_pin, HIGH);
+//      } 
+//    }
     delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
     digitalWrite(ELEMENT_firing_pin,HIGH);
     delayMicroseconds(100);
