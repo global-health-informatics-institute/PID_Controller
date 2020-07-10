@@ -48,7 +48,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =1000;   float ki= 1.2;   int kd = 75000;
+int kp =1000;   float ki = 0.5;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -175,7 +175,7 @@ void loop()
 //    Outer_Temp = X - 46.85;
 
     //Geting Inner Temperature by checking Difference of  pr
-    Inner_Temp = GetTemp(18, 19);  
+    Inner_Temp = GetTemp(21, 22);//GetTemp(18, 19);  
     
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
@@ -196,7 +196,7 @@ void loop()
           Old_Outer_Temp = Outer_Temp;
       }
 
-    real_temperature = GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    real_temperature = GetTemp(18, 19); //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
@@ -275,7 +275,7 @@ void loop()
        // Print the firing delay and the temps of the locations so we can graph them
     Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
     Serial.print(", Heat Control Temp=" + String(real_temperature)); 
-    Serial.print(", Inner Temp=" + String(Inner_Temp ));
+    Serial.print(", Center Temp=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
 //    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
 //    Serial.print(", Fan Speed =" + String(FanSpeed));     
