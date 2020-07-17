@@ -38,7 +38,7 @@ const int maximum_firing_delay = 9000;
 unsigned long previousMillis = 0; 
 unsigned long currentMillis = 0;
 int temp_read_Delay = 500;
-int setpoint = 95;
+int setpoint = 115;
 int print_firing_delay;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
@@ -48,7 +48,7 @@ float previous_error = 0;
 float elapsedTime, Time, timePrev;
 float PID_value = 0;
 //PID constants
-int kp =1000;   float ki = 0.5;   int kd = 0;
+int kp =1500;   float ki = 0.5;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -130,7 +130,8 @@ void setup()
 //  Wire.begin(18, 19, 50000);  //Inner sensor
 //  Wire1.begin(16, 17, 50000);  //Outer sensor
 //  Wire2.begin(21, 22, 50000);  //Element_PID sensor
-//  digitalWrite(FAN_firing_pin, HIGH);
+// digitalWrite(FAN_firing_pin, HIGH);
+// digitalWrite(ELEMENT_firing_pin,HIGH);
 
 
 }
@@ -278,7 +279,7 @@ void loop()
     Serial.print(", Center Temp=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
 //    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
-//    Serial.print(", Fan Speed =" + String(FanSpeed));     
+    Serial.print(", Fan Speed =" + String(FanSpeed));     
 //    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
