@@ -59,7 +59,7 @@ unsigned long currentMicros = 0;
 int voltage_read_Delay = 4800;
 float volts = 0;
 float actualvolts = 0;
-float volt_greater_than_twenty = 0;
+float volt_reading = 0;
 int voltage_read_difference=0;
 unsigned long Last_Zero_Crossing_Time = 0;
 float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
@@ -183,9 +183,9 @@ void loop()
   //get voltage reading
    if (((currentMicros - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
     Voltage_read = true;
-    volt_greater_than_twenty = adc.analogRead(0) / 1024.0*420*0.7071;
-    if(volt_greater_than_twenty > 50) {
-      LastFiftyVolts[VoltsArrayIndex] = volt_greater_than_twenty; 
+    volt_reading = adc.analogRead(0) / 1024.0*420*0.7071;
+    if(volt_reading > 50) {
+      LastFiftyVolts[VoltsArrayIndex] = volt_reading; 
       volts = VoltsArrayAverage();
       VoltsArrayIndex = (VoltsArrayIndex + 1) % 50;       
     }
