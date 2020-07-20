@@ -38,9 +38,9 @@ int last_CH1_state = 0;
 bool zero_cross_detected = false;
 const int maximum_firing_delay = 9000;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
-unsigned long previousMillis = 0; 
-unsigned long currentMillis = 0;
-int temp_read_Delay = 500;
+//unsigned long previousMillis = 0; 
+//unsigned long currentMillis = 0;
+int temp_read_Delay = 500000;
 int setpoint = 115;
 int print_firing_delay;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
@@ -62,7 +62,7 @@ float actualvolts = 0;
 float volt_greater_than_twenty = 0;
 int voltage_read_difference=0;
 unsigned long Last_Zero_Crossing_Time = 0;
-float LastTenVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
+float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 int VoltsArrayIndex = 0;
 
 //PID constants
@@ -127,8 +127,8 @@ double VoltsArrayAverage() {
   double S=0;
   int Voltge_Values = 0;
   for (int i=0; i<50; i++) {
-    if (LastTenVolts[i] != 0 ){
-      S = S+LastTenVolts[i];
+    if (LastFiftyVolts[i] != 0 ){
+      S = S+LastFiftyVolts[i];
       Voltge_Values++;
     }   
   }
@@ -139,20 +139,20 @@ double VoltsArrayAverage() {
 }
 
 ////This Is New
-//double PID_dArrayAverage() {
-//  double S=0;
-//  int Values = 0;
-//  for (int i=0; i<20; i++) {
-//    if (LastTwentyPID_d[i] != 0 ){
-//      S = S+LastTwentyPID_d[i];
-//      Values++;
-//    }   
-//  }
-//  if (Values > 0)
-//    return S/Values;
-//  else
-//   return 0;
-//}
+/*double PID_dArrayAverage() {
+  double S=0;
+  int Values = 0;
+  for (int i=0; i<20; i++) {
+    if (LastTwentyPID_d[i] != 0 ){
+      S = S+LastTwentyPID_d[i];
+      Values++;
+    }   
+  }
+  if (Values > 0)
+    return S/Values;
+  else
+   return 0;
+}*/
 
 void setup() 
 {
@@ -166,10 +166,10 @@ void setup()
   pinMode (ELEMENT_firing_pin, OUTPUT);
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
-//  Wire.begin(18, 19, 50000);  //Inner sensor
-//  Wire1.begin(16, 17, 50000);  //Outer sensor
-//  Wire2.begin(21, 22, 50000);  //Element_PID sensor
-// digitalWrite(FAN_firing_pin, HIGH);
+  /*Wire.begin(18, 19, 50000);  //Inner sensor
+  Wire1.begin(16, 17, 50000);  //Outer sensor
+  Wire2.begin(21, 22, 50000);  //Element_PID sensor*/
+  digitalWrite(FAN_firing_pin, HIGH);
 // digitalWrite(ELEMENT_firing_pin,HIGH);
 
 
@@ -177,43 +177,57 @@ void setup()
 
 void loop() 
 {   
-  currentMillis = millis();           //Save the value of time before the loop
+//  currentMillis = millis();           //Save the value of time before the loop
   currentMicros = micros(); 
+
+  //get voltage reading
+   if (((currentMicros - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
+    Voltage_read = true;
+    volt_greater_than_twenty = adc.analogRead(0) / 1024.0*420*0.7071;
+    if(volt_greater_than_twenty > 50) {
+      LastFiftyVolts[VoltsArrayIndex] = volt_greater_than_twenty; 
+      volts = VoltsArrayAverage();
+      VoltsArrayIndex = (VoltsArrayIndex + 1) % 50;       
+    }
+    
+   }//end get voltage reading
+    
 //  // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
-//  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
-//     Wire.beginTransmission(ADDR);
-//     Wire.write(MeasureTemp);
-//     Wire.endTransmission();
-//     Wire1.beginTransmission(ADDR);
-//     Wire1.write(MeasureTemp);
-//     Wire1.endTransmission();
-//     TempRequestSent = true;
-//  }
-//  
+/*  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
+     Wire.beginTransmission(ADDR);
+     Wire.write(MeasureTemp);
+     Wire.endTransmission();
+     Wire1.beginTransmission(ADDR);
+     Wire1.write(MeasureTemp);
+     Wire1.endTransmission();
+     TempRequestSent = true;
+  }*/
+
+
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
-  if(currentMillis - previousMillis >= temp_read_Delay){
-    previousMillis += temp_read_Delay;              //Increase the previous time for next loop
-//    Wire.requestFrom(ADDR, 2);
-//    if (Wire.available() <= 2); {
-//      X0 = Wire.read();
-//      X1 = Wire.read();
-//      X0 = X0 << 8;
-//      X_out = X0 + X1;
-//    }
-//    /**Calculate temperature**/
-//    X = (175.72 * X_out) / 65536;
-//    Inner_Temp = X - 46.85;
-//
-//    Wire1.requestFrom(ADDR, 2);
-//    if (Wire1.available() <= 2); {
-//      X0 = Wire1.read();
-//      X1 = Wire1.read();
-//      X0 = X0 << 8;
-//      X_out = X0 + X1;
-//    }
-//    /**Calculate temperature**/
-//    X = (175.72 * X_out) / 65536;
-//    Outer_Temp = X - 46.85;
+  if(currentMicros - previousMicros >= temp_read_Delay){
+    previousMicros += temp_read_Delay;              //Increase the previous time for next loop
+   /* Wire.requestFrom(ADDR, 2);
+    if (Wire.available() <= 2); {
+      X0 = Wire.read();
+      X1 = Wire.read();
+      X0 = X0 << 8;
+      X_out = X0 + X1;
+    }
+    //Calculate temperature
+    X = (175.72 * X_out) / 65536;
+    Inner_Temp = X - 46.85;
+
+    Wire1.requestFrom(ADDR, 2);
+    if (Wire1.available() <= 2); {
+      X0 = Wire1.read();
+      X1 = Wire1.read();
+      X0 = X0 << 8;
+      X_out = X0 + X1;
+    }
+    //Calculate temperature
+    X = (175.72 * X_out) / 65536;
+    Outer_Temp = X - 46.85;*/
 
     //Geting Inner Temperature by checking Difference of  pr
     Inner_Temp = GetTemp(21, 22);//GetTemp(18, 19);  
@@ -250,17 +264,17 @@ void loop()
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
     Time = millis();                    // actual time read
-    elapsedTime = (Time - timePrev) / 1000;   
+    elapsedTime = (Time - timePrev) / 1000000;   
         
     // Element PID Control
 
     //This Is New to avoid Over Heating and Smoothen Graph 
-//    if (real_temperature < setpoint)
-//       PID_error = 110 - Outer_Temp;    
-//    else{
-//       previous_error = 0;
-//       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
-//    }
+   /* if (real_temperature < setpoint)
+       PID_error = 110 - Outer_Temp;    
+    else{
+       previous_error = 0;
+       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+    }*/
 
     PID_error = setpoint - real_temperature;  
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
@@ -271,7 +285,7 @@ void loop()
     //THIS NEW //Calculate the D value 
    PID_d = -(2.0f*kd*(real_temperature-prev_real_temperature) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     
-  //    PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
+    //PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
     PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
     //We define firing delay range between 0 and 9000.
     if(PID_value < 0)      
@@ -280,91 +294,67 @@ void loop()
       PID_value = maximum_firing_delay; 
     previous_error = PID_error; //Remember to store the previous error.
 
-//    //FAN PID Control
-//    FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
-//
-//    if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-//      FAN_PID_i = 0;
-//    FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
-//    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
-//    FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
-//    FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
-//    if(FAN_PID_value < 0)      
-//      FAN_PID_value = 0;       
-//    if(FAN_PID_value > FAN_maximum_firing_delay)      
-//      FAN_PID_value = FAN_maximum_firing_delay;    
-//    FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
-//    TempRequestSent = false;  // THIS IS REQUIRED
-//    //end new FAN PID code    
+    //FAN PID Control
+   /* FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
+
+    if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
+      FAN_PID_i = 0;
+    FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
+    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
+    FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
+    FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
+    if(FAN_PID_value < 0)      
+      FAN_PID_value = 0;       
+    if(FAN_PID_value > FAN_maximum_firing_delay)      
+      FAN_PID_value = FAN_maximum_firing_delay;    
+    FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
+    TempRequestSent = false;  // THIS IS REQUIRED
+    //end new FAN PID code*/    
     
-//     MAP FAN_PID_value to a FanSpeed  
+//  MAP FAN_PID_value to a FanSpeed  
     FanSpeed = 11;//((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
  
     //Print the values on the LCD
-//    Wire.begin(21,22,50000);
-//    lcd.clear();
-//    lcd.setCursor(0,0);
-//    lcd.print("Set: ");
-//    lcd.setCursor(5,0);
-//    lcd.print(setpoint);
-//    lcd.setCursor(0,1);
-//    lcd.print("Real temp: ");
-//    lcd.setCursor(11,1);
-//    lcd.print(real_temperature);
+   /* Wire.begin(21,22,50000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Set: ");
+    lcd.setCursor(5,0);
+    lcd.print(setpoint);
+    lcd.setCursor(0,1);
+    lcd.print("Real temp: ");
+    lcd.setCursor(11,1);
+    lcd.print(real_temperature);*/
    TempRequestSent = false;  // THIS IS REQUIRED
-
-   //get voltage reading
-   if (((currentMicros - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
-    Voltage_read = true;
-    volt_greater_than_twenty = adc.analogRead(0) / 1024.0*404*0.7071;
-    if(volt_greater_than_twenty > 50) {
-      LastTenVolts[VoltsArrayIndex] = volt_greater_than_twenty; 
-      volts = VoltsArrayAverage();
-      VoltsArrayIndex = (VoltsArrayIndex + 1) % 50;       
-    }
-    
-    actualvolts = adc.analogRead(0) / 1024.0*404*0.7071;
-    voltage_read_difference= currentMicros - Last_Zero_Crossing_Time;
-//    Serial.print(volts);
-//    Serial.print("," + String(actualvolts));
-//    Serial.print("," + String(currentMicros));
-//    Serial.print("," + String(Last_Zero_Crossing_Time));
-//    Serial.print("," + String(voltage_read_difference));
-//    Serial.println(" ");
-//    if (volts > 20) {
-//      Serial.println(volts);
-//    }
-    }//end get voltage reading
    
-       // Print the firing delay and the temps of the locations so we can graph them
+    // Print the firing delay and the temps of the locations so we can graph them
     Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
-    Serial.print(", Heat Control Temp=" + String(real_temperature)); 
+    /*Serial.print(", Heat Control Temp=" + String(real_temperature)); */
     Serial.print(", Center Temp=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
-//    Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
+    /*Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
     Serial.print(", Fan Speed =" + String(FanSpeed));     
-//    Serial.print(", Error=" + String(FAN_PID_error));   // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
+    Serial.print(", Error=" + String(FAN_PID_error)); */  // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
-    Serial.print(", PID_d=" + String(PID_d)); 
+    Serial.print(", PID_d=" + String(PID_d));
     Serial.print(", Voltage=" + String(volts));
-//    Serial.print (", "+ String(PID_dArrayIndex));
-//    for (int i=0; i<20; i++) {
-////     Serial.print(", " + String(LastTwentyPID_d[i]));
-//    }
+    /*Serial.print (", "+ String(PID_dArrayIndex));
+   for (int i=0; i<20; i++) {
+     Serial.print(", " + String(LastTwentyPID_d[i]));
+    }*/
     Serial.println();
-//This is new
+  //This is new
   prev_real_temperature = real_temperature;
 
-  }
-  
+  }  
   
   //If the zero cross interruption was detected we create the 100us firing pulse  
   if (zero_cross_detected){
     Voltage_read = false;
     zero_cross_detected = false;
-    if (FanOn == true) {
+    /*if (FanOn == true) {
       if (FanCyclesOn > 0)
         FanCyclesOn -= 1;
       else {
@@ -381,7 +371,7 @@ void loop()
          FanCyclesOn = FanSpeed;
          digitalWrite(FAN_firing_pin, HIGH);
       } 
-    }
+    }*/
     delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
     digitalWrite(ELEMENT_firing_pin,HIGH);
     delayMicroseconds(100);
