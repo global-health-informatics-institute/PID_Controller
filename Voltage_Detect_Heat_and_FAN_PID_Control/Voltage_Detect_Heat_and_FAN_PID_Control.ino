@@ -48,7 +48,7 @@ int print_firing_delay;
 //PID variables
 float PID_error = 0;
 float previous_error = 0;
-float elapsedTime, Time, timePrev;
+unsigned long elapsedTime, Time, timePrev;
 float PID_value = 0;
 
 //Voltage detection variables
@@ -60,7 +60,6 @@ int voltage_read_Delay = 4800;
 float volts = 0;
 float actualvolts = 0;
 float volt_reading = 0;
-int voltage_read_difference=0;
 unsigned long Last_Zero_Crossing_Time = 0;
 float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 int VoltsArrayIndex = 0;
