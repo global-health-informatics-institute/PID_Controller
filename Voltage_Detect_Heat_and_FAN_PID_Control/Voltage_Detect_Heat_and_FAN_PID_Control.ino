@@ -166,17 +166,14 @@ void setup()
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
   /*Wire.begin(18, 19, 50000);  //Inner sensor
-  Wire1.begin(16, 17, 50000);  //Outer sensor
-  Wire2.begin(21, 22, 50000);  //Element_PID sensor*/
+  Wire1.begin(16, 17, 50000);  //Outer sensor*/
   digitalWrite(FAN_firing_pin, HIGH);
 // digitalWrite(ELEMENT_firing_pin,HIGH);
-
-
 }
 
 void loop() 
 {   
-//  currentMillis = millis();           //Save the value of time before the loop
+  /*currentMillis = millis();           //Save the value of time before the loop8*/
   currentMicros = micros(); 
 
   //get voltage reading
@@ -191,7 +188,7 @@ void loop()
     
    }//end get voltage reading
     
-//  // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
+    // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
 /*  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
      Wire.beginTransmission(ADDR);
      Wire.write(MeasureTemp);
@@ -229,7 +226,7 @@ void loop()
     Outer_Temp = X - 46.85;*/
 
     //Geting Inner Temperature by checking Difference of  pr
-    Inner_Temp = GetTemp(21, 22);//GetTemp(18, 19);  
+    Inner_Temp = GetTemp(18, 19);//GetTemp(18, 19);  
     
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
@@ -250,7 +247,7 @@ void loop()
           Old_Outer_Temp = Outer_Temp;
       }
 
-    real_temperature = GetTemp(18, 19); //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    real_temperature = GetTemp(21, 22); //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
@@ -268,14 +265,13 @@ void loop()
     // Element PID Control
 
     //This Is New to avoid Over Heating and Smoothen Graph 
-   /* if (real_temperature < setpoint)
-       PID_error = 110 - Outer_Temp;    
+    if (real_temperature < setpoint)
+       PID_error = 120 - Outer_Temp;    
     else{
        previous_error = 0;
        PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
-    }*/
-
-    PID_error = setpoint - real_temperature;  
+    }
+    
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
@@ -328,8 +324,8 @@ void loop()
    
     // Print the firing delay and the temps of the locations so we can graph them
     Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
-    /*Serial.print(", Heat Control Temp=" + String(real_temperature)); */
-    Serial.print(", Center Temp=" + String(Inner_Temp ));
+    Serial.print(", Heat Control Temp=" + String(real_temperature)); 
+    Serial.print(", Inner Temp=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
     /*Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
     Serial.print(", Fan Speed =" + String(FanSpeed));     
