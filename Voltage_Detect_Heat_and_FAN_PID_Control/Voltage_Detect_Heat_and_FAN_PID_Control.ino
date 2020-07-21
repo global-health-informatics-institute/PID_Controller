@@ -41,7 +41,7 @@ const int maximum_firing_delay = 9000;
 //unsigned long previousMillis = 0; 
 //unsigned long currentMillis = 0;
 int temp_read_Delay = 500000;
-int setpoint = 115;
+int setpoint = 95;
 int print_firing_delay;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
@@ -259,14 +259,14 @@ void loop()
     
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
-    Time = millis();                    // actual time read
+    Time = micros();                    // actual time read
     elapsedTime = (Time - timePrev) / 1000000;   
         
     // Element PID Control
 
     //This Is New to avoid Over Heating and Smoothen Graph 
-    if (real_temperature < setpoint)
-       PID_error = 120 - Outer_Temp;    
+    if (real_temperature < (setpoint-2))
+       PID_error = 120 - Outer_Temp;  
     else{
        previous_error = 0;
        PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
