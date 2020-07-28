@@ -50,6 +50,7 @@ float PID_error = 0;
 float previous_error = 0;
 unsigned long elapsedTime, Time, timePrev;
 float PID_value = 0;
+int transition_state;
 
 //Voltage detection variables
 bool Voltage_read = false;
@@ -65,7 +66,7 @@ float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 int VoltsArrayIndex = 0;
 
 //PID constants
-int kp =1500;   float ki = 0.5;   int kd = 0;
+int kp =250;   float ki = 0.5;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -156,6 +157,7 @@ double VoltsArrayAverage() {
 void setup() 
 {
   Serial.begin(115200);
+  transition_state = 0;
 //  lcd.begin(); //Begin the LCD communication through I2C
 //  lcd.backlight();  //Turn on backlight for LCD
 
@@ -264,21 +266,25 @@ void loop()
         
     // Element PID Control
 
-    //This Is New to avoid Over Heating and Smoothen Graph 
-    if (real_temperature < (setpoint-2))
-       PID_error = 120 - Outer_Temp;  
-    else{
-       previous_error = 0;
-       PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+    if (real_temperature > 93)
+      transition_state == 1;
+    if (transition_state == 0){
+      PID_error = 120 - Outer_Temp; 
+      kp = 250; //Transitioning Kp in relation to Setpoint
+    }
+    if (transition_state == 1){
+      previous_error = 0;
+      PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+      kp = 50; //Transitioning Kp in relation to Setpoint
     }
     
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
-   PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + previous_error);              //Calculate the I value
+    PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + previous_error);              //Calculate the I value
 
     //THIS NEW //Calculate the D value 
-   PID_d = -(2.0f*kd*(real_temperature-prev_real_temperature) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
+    PID_d = -(2.0f*kd*(real_temperature-prev_real_temperature) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     
     //PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
     PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
@@ -334,6 +340,7 @@ void loop()
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
     Serial.print(", PID_d=" + String(PID_d));
+    Serial.print(", Kp =" + String(kp)); 
     Serial.print(", Voltage=" + String(volts));
     /*Serial.print (", "+ String(PID_dArrayIndex));
    for (int i=0; i<20; i++) {
