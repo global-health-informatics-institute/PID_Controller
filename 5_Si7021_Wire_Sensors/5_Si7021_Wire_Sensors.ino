@@ -57,7 +57,7 @@ void loop() {
     }
     
   //Get Value from Sensor #2 (Front Left)
-  Temp_S2 = GetTemp(17,19);  
+  Temp_S2 = GetTemp(17,19) + 2.345;  
   
   if(Old_Temp_S2 == 0.00){
     Old_Temp_S2 = Temp_S2;
@@ -81,7 +81,7 @@ void loop() {
     }
 
   //Get Value from Sensor #4 (Hinge Right)
-  Temp_S4 = GetTemp(14,25);  
+  Temp_S4 = GetTemp(14,25) + 2.431;  
   
   if(Old_Temp_S4 == 0.00){
     Old_Temp_S4 = Temp_S4;
@@ -93,7 +93,7 @@ void loop() {
     }
 
   //Get Value from Sensor #5 (Front Right)
-  Temp_S5 = GetTemp(27,33);  
+  Temp_S5 = GetTemp(27,33) - 1.398;  
   
   if(Old_Temp_S5 == 0.00){
     Old_Temp_S5 = Temp_S5;
