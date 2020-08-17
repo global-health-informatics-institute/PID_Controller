@@ -239,7 +239,7 @@ void loop()
     Outer_Temp = X - 46.85;*/
 
 
-    //We use Inner_temp for the left side
+    //We use Inner_temp for the Right side
     Inner_Temp = GetTemp(18, 19);//GetTemp(18, 19);  
     
     if(Old_Inner_Temp == 0.00){
@@ -261,7 +261,7 @@ void loop()
           Old_Outer_Temp = Outer_Temp;
       }
 
-    //We use Real_temp for the Right side
+    //We use Real_temp for the Left side
     real_temperature = GetTemp(21, 22); //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
