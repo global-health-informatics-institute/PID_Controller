@@ -238,7 +238,8 @@ void loop()
     X = (175.72 * X_out) / 65536;
     Outer_Temp = X - 46.85;*/
 
-    
+
+    //We use Inner_temp for the left side
     Inner_Temp = GetTemp(18, 19);//GetTemp(18, 19);  
     
     if(Old_Inner_Temp == 0.00){
@@ -250,7 +251,6 @@ void loop()
           Old_Inner_Temp = Inner_Temp;
       }
 
-    //We use Outer_temp for the left side
     Outer_Temp = GetTemp(16, 17);
     if(Old_Outer_Temp == 0.00){
       Old_Outer_Temp = Outer_Temp;
