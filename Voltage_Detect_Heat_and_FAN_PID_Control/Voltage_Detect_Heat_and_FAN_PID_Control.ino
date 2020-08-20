@@ -21,8 +21,8 @@ MCP3002 adc;
  */
 
 //Inputs and outputs
-gpio_num_t ELEMENT_firing_pin = GPIO_NUM_33; // THIS IS FOR THE ELEMENT TRIAC AS PER PCB LAYOUT
-gpio_num_t FAN_firing_pin = GPIO_NUM_32; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
+gpio_num_t LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE ELEMENT TRIAC AS PER PCB LAYOUT
+gpio_num_t RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
 const int ADDR = 0x40;
@@ -50,6 +50,7 @@ float PID_error = 0;
 float previous_error = 0;
 unsigned long elapsedTime, Time, timePrev;
 float PID_value = 0;
+float left_firing_delay=0;
 int transition_state;
 
 //Voltage detection variables
@@ -100,6 +101,7 @@ double prev_Inner_Temp ; //record previous measurement
 float right_PID_error = 0;
 float right_previous_error = 0;
 float right_PID_value = 0;
+float right_firing_delay;
 int right_transition_state;
 
 //PID constants
@@ -174,14 +176,14 @@ void setup()
 
   //adc.begin(SS, MOSI, MISO, SCK);// Or use custom pins to use a software SPI interface.
   adc.begin(27,13,12,14);// Use the defined pins for SPI hardware interface.
-  pinMode (FAN_firing_pin, OUTPUT);
-  pinMode (ELEMENT_firing_pin, OUTPUT);
+  pinMode (RIGHT_Element_Firing_Pin, OUTPUT);
+  pinMode (LEFT_Element_Firing_Pin, OUTPUT);
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
   /*Wire.begin(18, 19, 50000);  //Inner sensor
   Wire1.begin(16, 17, 50000);  //Outer sensor*/
- // digitalWrite(FAN_firing_pin, HIGH);
-// digitalWrite(ELEMENT_firing_pin,HIGH);
+ // digitalWrite(RIGHT_Element_Firing_Pin, HIGH);
+// digitalWrite(LEFT_Element_Firing_Pin,HIGH);
 }
 
 void loop() 
@@ -413,7 +415,7 @@ void loop()
       else {
         FanOn = false;
         FanCyclesOff = 25 - FanSpeed;
-        digitalWrite(FAN_firing_pin, LOW);          
+        digitalWrite(RIGHT_Element_Firing_Pin, LOW);          
       }
     }  
     else {
@@ -422,21 +424,48 @@ void loop()
       else {
          FanOn = true;
          FanCyclesOn = FanSpeed;
-         digitalWrite(FAN_firing_pin, HIGH);
+         digitalWrite(RIGHT_Element_Firing_Pin, HIGH);
       } 
     }*/
 
-    //Left Side Warmer PID
+   /* //Left Side Warmer PID
     delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
-    digitalWrite(ELEMENT_firing_pin,HIGH);
+    digitalWrite(LEFT_Element_Firing_Pin,HIGH);
     delayMicroseconds(100);
-    digitalWrite(ELEMENT_firing_pin,LOW);
+    digitalWrite(LEFT_Element_Firing_Pin,LOW);
     
     //Right Side Warmer PID
     delayMicroseconds(maximum_firing_delay - right_PID_value); //This delay controls the power
-    digitalWrite(FAN_firing_pin,HIGH);
+    digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
     delayMicroseconds(100);
-    digitalWrite(FAN_firing_pin,LOW);
+    digitalWrite(RIGHT_Element_Firing_Pin,LOW);*/
+
+    //Firing pulses for the left and right side warmer
+    left_firing_delay = maximum_firing_delay - PID_value;//Left Side Warmer firing delay
+    right_firing_delay = maximum_firing_delay - right_PID_value;//Right Side Warmer firing delay
+    
+    float left_right_delay_diff = left_firing_delay - right_firing_delay;
+    left_right_delay_diff = abs(left_right_delay_diff);
+
+    if (left_right_delay_diff <= 50){
+      delayMicroseconds(left_firing_delay);//This delay controls the power
+      digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+      digitalWrite(RIGHT_Element_Firing_Pin,HIGH);      
+    } else if (left_firing_delay < right_firing_delay) {
+        delayMicroseconds(left_firing_delay);//This delay controls the power
+        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+        delayMicroseconds(right_firing_delay - left_firing_delay);//This delay controls the power
+        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
+      } else if (right_firing_delay < left_firing_delay) {
+        delayMicroseconds(right_firing_delay);//This delay controls the power
+        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
+        delayMicroseconds(left_firing_delay - right_firing_delay);//This delay controls the power
+        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+      }
+      
+    delayMicroseconds(100);
+    digitalWrite(LEFT_Element_Firing_Pin,LOW);
+    digitalWrite(RIGHT_Element_Firing_Pin,LOW);
 
     
   } 
