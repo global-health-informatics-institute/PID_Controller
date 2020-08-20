@@ -377,9 +377,10 @@ void loop()
    TempRequestSent = false;  // THIS IS REQUIRED
    
     // Print the firing delay and the temps of the locations so we can graph them
-    Serial.print(", Heat Firing Delay="  + String ((maximum_firing_delay - PID_value)/100.0));
-    Serial.print(", Heat Control Temp=" + String(real_temperature)); 
-    Serial.print(", Inner Temp=" + String(Inner_Temp ));
+    Serial.print(", Heat Firing Delay L="  + String ((maximum_firing_delay - PID_value)/100.0));
+    Serial.print(",Heat Firing delay R=" +String((maximum_firing_delay - right_PID_value)/100.0));
+    Serial.print(", Heat Control Temp L=" + String(real_temperature)); 
+    Serial.print(", Heat Control Temp R=" + String(Inner_Temp ));
     Serial.print(", Outer Temp=" + String(Outer_Temp )); 
     /*Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
     Serial.print(", Fan Speed =" + String(FanSpeed));     
@@ -389,7 +390,8 @@ void loop()
     Serial.print(", PID_i=" + String(PID_i)); 
     Serial.print(", PID_d=" + String(PID_d));
     Serial.print(", Kp =" + String(kp)); 
-    Serial.print(", Tran_State =" + String(transition_state)); 
+    Serial.print(", Tran_State L=" + String(transition_state)); 
+    Serial.print(", Tran_State L=" + String(right_transition_state)); 
     Serial.print(", Voltage=" + String(volts));
     /*Serial.print (", "+ String(PID_dArrayIndex));
    for (int i=0; i<20; i++) {
