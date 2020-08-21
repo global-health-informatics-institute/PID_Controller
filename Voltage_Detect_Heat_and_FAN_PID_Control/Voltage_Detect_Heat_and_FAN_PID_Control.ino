@@ -67,7 +67,7 @@ float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 int VoltsArrayIndex = 0;
 
 //PID constants
-int kp =500;   float ki = 0;   int kd = 0;
+int kp =1500;   float ki = 0;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -281,20 +281,21 @@ void loop()
         
     // Left Warmer PID Control
     
-    //Preheating State
-    if (real_temperature > 97)
-      transition_state = 1;
-    if (transition_state == 0){
-      PID_error = 125 - Outer_Temp; 
-      kp = 1000; //Transitioning Kp in relation to Setpoint
-    }
-    //Stablizing State
-    if (transition_state == 1){
-      previous_error = 0;
-      PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
-      kp = 1500; //Transitioning Kp in relation to Setpoint
-    }
-    
+//    //Preheating State
+//    if (real_temperature > 97)
+//      transition_state = 1;
+//    if (transition_state == 0){
+//      PID_error = 125 - Outer_Temp; 
+//      kp = 1000; //Transitioning Kp in relation to Setpoint
+//    }
+//    //Stablizing State
+//    if (transition_state == 1){
+//      previous_error = 0;
+//      PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
+//      kp = 1500; //Transitioning Kp in relation to Setpoint
+//    }
+
+    PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
     PID_p = kp * PID_error;                         //Calculate the P value
@@ -314,20 +315,21 @@ void loop()
 
     // Right Warmer PID Control
     
-    //Preheating State
-    if (Inner_Temp > 97)
-      right_transition_state = 1;
-    if (right_transition_state == 0){
-      right_PID_error = 125 - Outer_Temp; 
-      kp = 1000; //Transitioning Kp in relation to Setpoint
-    }
-    //Stablizing State
-    if (right_transition_state == 1){
-      right_previous_error = 0;
-      right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
-      kp = 1500; //Transitioning Kp in relation to Setpoint
-    }
-    
+//    //Preheating State
+//    if (Inner_Temp > 97)
+//      right_transition_state = 1;
+//    if (right_transition_state == 0){
+//      right_PID_error = 125 - Outer_Temp; 
+//      kp = 1000; //Transitioning Kp in relation to Setpoint
+//    }
+//    //Stablizing State
+//    if (right_transition_state == 1){
+//      right_previous_error = 0;
+//      right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
+//      kp = 1500; //Transitioning Kp in relation to Setpoint
+//    }
+
+    right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
     if(right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       right_PID_i = 0;
     right_PID_p = kp * right_PID_error;                         //Calculate the P value
@@ -392,8 +394,8 @@ void loop()
     Serial.print(", PID_i=" + String(PID_i)); 
     Serial.print(", PID_d=" + String(PID_d));
     Serial.print(", Kp =" + String(kp)); 
-    Serial.print(", Tran_State L=" + String(transition_state)); 
-    Serial.print(", Tran_State L=" + String(right_transition_state)); 
+//    Serial.print(", Tran_State L=" + String(transition_state)); 
+//    Serial.print(", Tran_State L=" + String(right_transition_state)); 
     Serial.print(", Voltage=" + String(volts));
     /*Serial.print (", "+ String(PID_dArrayIndex));
    for (int i=0; i<20; i++) {
