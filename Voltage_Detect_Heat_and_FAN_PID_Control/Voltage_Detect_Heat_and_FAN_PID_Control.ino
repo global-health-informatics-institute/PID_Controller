@@ -67,7 +67,7 @@ float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 int VoltsArrayIndex = 0;
 
 //PID constants
-int kp =1500;   float ki = 0;   int kd = 0;
+int kp =2500;   float ki = 0;   int kd = 0;
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
 // NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
@@ -242,7 +242,7 @@ void loop()
 
 
     //We use Inner_temp for the Right side
-    Inner_Temp = GetTemp(18, 19);//GetTemp(18, 19);  
+    Inner_Temp = GetTemp(18, 19) + 1.24;//GetTemp(18, 19);  
     
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
@@ -264,7 +264,7 @@ void loop()
       }
 
     //We use Real_temp for the Left side
-    real_temperature = GetTemp(21, 22); //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    real_temperature = GetTemp(21, 22) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
