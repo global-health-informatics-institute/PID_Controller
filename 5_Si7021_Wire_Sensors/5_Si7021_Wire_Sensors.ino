@@ -10,6 +10,11 @@ const int MeasureTemp = 0xE3;
 int X0,X1,temp;
 double X,X_out;
 
+//Variables to assist delay to track with oven delay
+int temp_read_Delay = 500000;
+unsigned long previousMicros = 0; 
+unsigned long currentMicros = 0;
+
 double Temp_S1, Temp_S2, Temp_S3, Temp_S4, Temp_S5;
 double Old_Temp_S1 = 0.00;
 double Old_Temp_S2 = 0.00;
@@ -17,14 +22,16 @@ double Old_Temp_S3 = 0.00;
 double Old_Temp_S4 = 0.00;
 double Old_Temp_S5 = 0.00;
 
-void setup() {
+void setup() 
+{
   Serial.begin(9600);
 //  lcd.init();                      // initialize the lcd 
 //  lcd.backlight();
 //  lcd.clear();
 }
 
-double GetTemp(int SDA_Pin, int SLC_pin) {
+double GetTemp(int SDA_Pin, int SLC_pin) 
+{
   Wire.begin(SDA_Pin,SLC_pin,10000);
   Wire.beginTransmission(ADDR);
   Wire.write(MeasureTemp);
@@ -42,72 +49,77 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
   return X;
 }
 
-void loop() {
-  
-  //Get Value from Sensor #1 (Hinge Left)
-  Temp_S1 = GetTemp(16,18);  
-  
-  if(Old_Temp_S1 == 0.00){
-    Old_Temp_S1 = Temp_S1;
-  } else{
-      if((abs(Temp_S1 - Old_Temp_S1)) > 5.00)
-        Temp_S1 = Old_Temp_S1;
-      else
-        Old_Temp_S1 = Temp_S1;
-    }
+void loop() 
+{ 
+ currentMicros = micros(); 
+ if(currentMicros - previousMicros >= temp_read_Delay){
+    previousMicros += temp_read_Delay; 
+    //Get Value from Sensor #1 (Hinge Left)
+    Temp_S1 = GetTemp(16,18);  
     
-  //Get Value from Sensor #2 (Front Left)
-  Temp_S2 = GetTemp(17,19) + 2.345;  
-  
-  if(Old_Temp_S2 == 0.00){
-    Old_Temp_S2 = Temp_S2;
-  } else{
-      if((abs(Temp_S2 - Old_Temp_S2)) > 5.00)
-        Temp_S2 = Old_Temp_S2;
-      else
-        Old_Temp_S2 = Temp_S2;
-    }
+    if(Old_Temp_S1 == 0.00){
+      Old_Temp_S1 = Temp_S1;
+    } else{
+        if((abs(Temp_S1 - Old_Temp_S1)) > 5.00)
+          Temp_S1 = Old_Temp_S1;
+        else
+          Old_Temp_S1 = Temp_S1;
+      }
+      
+    //Get Value from Sensor #2 (Front Left)
+    Temp_S2 = GetTemp(17,19);  
     
-  //Get Value from Sensor #3 (Center)
-  Temp_S3 = GetTemp(15,4);  
+    if(Old_Temp_S2 == 0.00){
+      Old_Temp_S2 = Temp_S2;
+    } else{
+        if((abs(Temp_S2 - Old_Temp_S2)) > 5.00)
+          Temp_S2 = Old_Temp_S2;
+        else
+          Old_Temp_S2 = Temp_S2;
+      }
+      
+    //Get Value from Sensor #3 (Center)
+    Temp_S3 = GetTemp(15,4);  
+    
+    if(Old_Temp_S3 == 0.00){
+      Old_Temp_S3 = Temp_S3;
+    } else{
+        if((abs(Temp_S3 - Old_Temp_S3)) > 5.00)
+          Temp_S3 = Old_Temp_S3;
+        else
+          Old_Temp_S3 = Temp_S3;
+      }
   
-  if(Old_Temp_S3 == 0.00){
-    Old_Temp_S3 = Temp_S3;
-  } else{
-      if((abs(Temp_S3 - Old_Temp_S3)) > 5.00)
-        Temp_S3 = Old_Temp_S3;
-      else
-        Old_Temp_S3 = Temp_S3;
-    }
-
-  //Get Value from Sensor #4 (Hinge Right)
-  Temp_S4 = GetTemp(14,25) + 2.431;  
+      
+    //Get Value from Sensor #4 (Hinge Right)
+    Temp_S4 = GetTemp(14,25);  
+    
+    if(Old_Temp_S4 == 0.00){
+      Old_Temp_S4 = Temp_S4;
+    } else{
+        if((abs(Temp_S4 - Old_Temp_S4)) > 5.00)
+          Temp_S4 = Old_Temp_S4;
+        else
+          Old_Temp_S4 = Temp_S4;
+      }
   
-  if(Old_Temp_S4 == 0.00){
-    Old_Temp_S4 = Temp_S4;
-  } else{
-      if((abs(Temp_S4 - Old_Temp_S4)) > 5.00)
-        Temp_S4 = Old_Temp_S4;
-      else
-        Old_Temp_S4 = Temp_S4;
-    }
-
-  //Get Value from Sensor #5 (Front Right)
-  Temp_S5 = GetTemp(27,33) - 1.398;  
-  
-  if(Old_Temp_S5 == 0.00){
-    Old_Temp_S5 = Temp_S5;
-  } else{
-      if((abs(Temp_S5 - Old_Temp_S5)) > 5.00)
-        Temp_S5 = Old_Temp_S5;
-      else
-        Old_Temp_S5 = Temp_S5;
-    }  
-  Serial.print("," +String(Temp_S1)); // Hinge Left
-  Serial.print("," +String(Temp_S2)); // Front Left
-  Serial.print("," +String(Temp_S3)); // Center
-  Serial.print("," +String(Temp_S4)); // Hinge Right 
-  Serial.print("," +String(Temp_S5)); // Front Right
-  Serial.println(); 
-  delay(500);
+    //Get Value from Sensor #5 (Front Right)
+    Temp_S5 = GetTemp(27,33);  
+    
+    if(Old_Temp_S5 == 0.00){
+      Old_Temp_S5 = Temp_S5;
+    } else{
+        if((abs(Temp_S5 - Old_Temp_S5)) > 5.00)
+          Temp_S5 = Old_Temp_S5;
+        else
+          Old_Temp_S5 = Temp_S5;
+      } 
+         
+    Serial.print("," +String(Temp_S1)); // Hinge Left
+    Serial.print("," +String(Temp_S2)); // Front Left
+    Serial.print("," +String(Temp_S3)); // Center
+    Serial.print("," +String(Temp_S4)); // Front Right
+    Serial.print("," +String(Temp_S5)); // Hinge Right 
+    Serial.println(); 
+ }
 }
