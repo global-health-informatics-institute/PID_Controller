@@ -55,7 +55,7 @@ void loop()
  if(currentMicros - previousMicros >= temp_read_Delay){
     previousMicros += temp_read_Delay; 
     //Get Value from Sensor #1 (Hinge Left)
-    Temp_S1 = GetTemp(16,18);  
+    Temp_S1 = GetTemp(16,18) + 2.20;  
     
     if(Old_Temp_S1 == 0.00){
       Old_Temp_S1 = Temp_S1;
@@ -67,7 +67,7 @@ void loop()
       }
       
     //Get Value from Sensor #2 (Front Left)
-    Temp_S2 = GetTemp(17,19);  
+    Temp_S2 = GetTemp(17,19) + 2.07;  
     
     if(Old_Temp_S2 == 0.00){
       Old_Temp_S2 = Temp_S2;
@@ -104,7 +104,7 @@ void loop()
       }
   
     //Get Value from Sensor #5 (Front Right)
-    Temp_S5 = GetTemp(27,33);  
+    Temp_S5 = GetTemp(27,33) - 3.50;  
     
     if(Old_Temp_S5 == 0.00){
       Old_Temp_S5 = Temp_S5;
