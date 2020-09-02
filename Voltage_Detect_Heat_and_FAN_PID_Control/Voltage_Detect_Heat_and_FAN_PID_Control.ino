@@ -23,8 +23,8 @@ MCP3002 adc;
 //Inputs and outputs
 gpio_num_t HINGE_LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE HINGE LEFT WARMER TRIAC AS PER PCB LAYOUT
 gpio_num_t HINGE_RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE HINGE RIGHT WARMER  TRIAC AS PER PCB LAYOUT
-gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_1; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
-gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_3; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_4; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_25; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
 const int ADDR = 0x40;
@@ -53,7 +53,7 @@ float PID_error = 0;
 float previous_error = 0;
 unsigned long elapsedTime, Time, timePrev;
 float PID_value = 0;
-float left_firing_delay=0;
+int left_firing_delay=0;
 int transition_state;
 
 //Voltage detection variables
@@ -91,7 +91,7 @@ double prev_Inner_Temp ; //record previous measurement
 float hinge_right_PID_error = 0;
 float hinge_right_previous_error = 0;
 float hinge_right_PID_value = 0;
-float hinge_right_firing_delay;
+int hinge_right_firing_delay = 0;
 int hinge_right_transition_state;
 
 //HINGE RIGHT Warmer PID constants
@@ -102,7 +102,7 @@ int hinge_right_PID_p = 0;    float hinge_right_PID_i = 0;    int hinge_right_PI
 float front_right_PID_error = 0;
 float front_right_previous_error = 0;
 float front_right_PID_value = 0;
-float front_right_firing_delay;
+int front_right_firing_delay = 0;
 int front_right_transition_state;
 
 //FRONT RIGHT Warmer PID constants
@@ -113,7 +113,7 @@ int front_right_PID_p = 0;    float front_right_PID_i = 0;    int front_right_PI
 float front_left_PID_error = 0;
 float front_left_previous_error = 0;
 float front_left_PID_value = 0;
-float front_left_firing_delay;
+int front_left_firing_delay = 0;
 int front_left_transition_state;
 
 //FRONT LEFT Warmer PID constants
@@ -241,7 +241,7 @@ void loop()
 
 
     //We use Inner_temp for the FRONT RIGHT Warmer.
-    F_Right_Temp = GetTemp(X, X) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    F_Right_Temp = GetTemp(15,2) + 4.99; //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_F_Right_Temp == 0.00){
       Old_F_Right_Temp = F_Right_Temp;
     } else{
@@ -393,35 +393,29 @@ void loop()
     Voltage_read = false;
     zero_cross_detected = false;
     
-//    //Firing pulses for the left and right side warmer
-//    left_firing_delay = maximum_firing_delay - PID_value;//Left Side Warmer firing delay
-//    right_firing_delay = maximum_firing_delay - right_PID_value;//Right Side Warmer firing delay
-//    
-//    float left_right_delay_diff = left_firing_delay - right_firing_delay;
-//    left_right_delay_diff = abs(left_right_delay_diff);
-//
-//    if (left_right_delay_diff <= 50){
-//      delayMicroseconds(left_firing_delay);//This delay controls the power
-//      digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-//      digitalWrite(RIGHT_Element_Firing_Pin,HIGH);      
-//    } else if (left_firing_delay < right_firing_delay) {
-//        delayMicroseconds(left_firing_delay);//This delay controls the power
-//        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-//        delayMicroseconds(right_firing_delay - left_firing_delay);//This delay controls the power
-//        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
-//      } else if (right_firing_delay < left_firing_delay) {
-//        delayMicroseconds(right_firing_delay);//This delay controls the power
-//        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
-//        delayMicroseconds(left_firing_delay - right_firing_delay);//This delay controls the power
-//        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-//      }
-      
-    delayMicroseconds(100);
-    digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
-    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
-    digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
-    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+  //HINGE LEFT WARMER CONTROL
+  if((currentMicros - Last_Zero_Crossing_Time) > left_firing_delay)
+    digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
+  if((currentMicros - Last_Zero_Crossing_Time) > (left_firing_delay + 100,000))
+    digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW); 
 
+  //HINGE RIGHT WARMER CONTROL
+  if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
+    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
+  if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100,000))
+    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW); 
+
+  //FRONT LEFT WARMER CONTROL
+  if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
+    digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+  if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100,000))
+    digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
+
+  //FRONT RIGHT WARMER CONTROL
+  if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
+    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+  if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100,000))
+    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);  
   } 
 }
 //End of void loop
