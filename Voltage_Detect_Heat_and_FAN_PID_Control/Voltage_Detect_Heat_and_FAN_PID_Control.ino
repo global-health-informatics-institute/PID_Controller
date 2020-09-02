@@ -241,7 +241,7 @@ void loop()
 
 
     //We use Inner_temp for the FRONT RIGHT Warmer.
-    F_Right_Temp = GetTemp(15,2) + 4.99; //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    F_Right_Temp = GetTemp(26,2) + 4.99; //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_F_Right_Temp == 0.00){
       Old_F_Right_Temp = F_Right_Temp;
     } else{
