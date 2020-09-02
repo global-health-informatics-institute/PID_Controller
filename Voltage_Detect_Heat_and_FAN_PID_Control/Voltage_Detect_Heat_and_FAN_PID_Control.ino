@@ -21,8 +21,10 @@ MCP3002 adc;
  */
 
 //Inputs and outputs
-gpio_num_t LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE ELEMENT TRIAC AS PER PCB LAYOUT
-gpio_num_t RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE FAN TRIAC AS PER PCB LAYOUT
+gpio_num_t HINGE_LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE HINGE LEFT WARMER TRIAC AS PER PCB LAYOUT
+gpio_num_t HINGE_RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE HINGE RIGHT WARMER  TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_1; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_3; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
 const int ADDR = 0x40;
@@ -36,6 +38,7 @@ double X,X_out;
 float tau = 0.02;
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
+bool TempRequestSent = false; // THIS IS NEW
 const int maximum_firing_delay = 9000;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 //unsigned long previousMillis = 0; 
@@ -68,44 +71,53 @@ int VoltsArrayIndex = 0;
 
 //PID constants
 int kp =2500;   float ki = 0;   int kd = 0;
+//HINGE LEFT PID constants
 int PID_p = 0;    float PID_i = 0;    int PID_d = 0;
 
-// NEW FAN VARIABLES FOR ON-OFF CONTROL METHOD
-int FanSpeed = 25;
-int FanCyclesOn, FanCyclesOff;
-bool FanOn = true;
-bool TempRequestSent = false; // THIS IS NEW
-int FAN_firing_delay = 0;  // Initialize this to ZERO and we will adjust for different to see how the speed of the fan varies
-
-//FAN PID variables
-float FAN_PID_error = 0;
-float FAN_previous_error = 0;
-int FAN_PID_value = 0;
-int FAN_maximum_firing_delay = 7000; //TESTING THIS VALUE
-
-//FAN PID constants
-int FAN_kp = 500;   int FAN_ki = 1;     int FAN_kd = 1000;
-int FAN_PID_p = 0;   int FAN_PID_i = 0;  int FAN_PID_d = 0;
-
 //OVEN Temp values
-double Outer_Temp, Inner_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
+double Outer_Temp, Inner_Temp, F_Right_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
 double real_temperature = 0.00;
 double Old_Inner_Temp = 0.00;
 double Old_Outer_Temp = 0.00;
 double Old_Real_Temp = 0.00; 
+double Old_F_Right_Temp = 0.00; 
 double prev_real_temperature; //record previous measurement
+double prev_F_Right_Temp;//record previous measurement
+double prev_Outer_Temp; //record previous measurement
 double prev_Inner_Temp ; //record previous measurement
 
-//NEW RIGHT Warmer Contol values
+//NEW HINGE RIGHT Warmer Contol values
 //PID variables
-float right_PID_error = 0;
-float right_previous_error = 0;
-float right_PID_value = 0;
-float right_firing_delay;
-int right_transition_state;
+float hinge_right_PID_error = 0;
+float hinge_right_previous_error = 0;
+float hinge_right_PID_value = 0;
+float hinge_right_firing_delay;
+int hinge_right_transition_state;
 
-//PID constants
-int right_PID_p = 0;    float right_PID_i = 0;    int right_PID_d = 0;
+//HINGE RIGHT Warmer PID constants
+int hinge_right_PID_p = 0;    float hinge_right_PID_i = 0;    int hinge_right_PID_d = 0;
+
+//NEW FRONT RIGHT Warmer Contol values
+//PID variables
+float front_right_PID_error = 0;
+float front_right_previous_error = 0;
+float front_right_PID_value = 0;
+float front_right_firing_delay;
+int front_right_transition_state;
+
+//FRONT RIGHT Warmer PID constants
+int front_right_PID_p = 0;    float front_right_PID_i = 0;    int front_right_PID_d = 0;
+
+//NEW FRONT LEFT Warmer Contol values
+//PID variables
+float front_left_PID_error = 0;
+float front_left_previous_error = 0;
+float front_left_PID_value = 0;
+float front_left_firing_delay;
+int front_left_transition_state;
+
+//FRONT LEFT Warmer PID constants
+int front_left_PID_p = 0;    float front_left_PID_i = 0;    int front_left_PID_d = 0;
 
 //Interrupt
 void IRAM_ATTR zero_crossing()
@@ -151,22 +163,6 @@ double VoltsArrayAverage() {
    return 0;
 }
 
-////This Is New
-/*double PID_dArrayAverage() {
-  double S=0;
-  int Values = 0;
-  for (int i=0; i<20; i++) {
-    if (LastTwentyPID_d[i] != 0 ){
-      S = S+LastTwentyPID_d[i];
-      Values++;
-    }   
-  }
-  if (Values > 0)
-    return S/Values;
-  else
-   return 0;
-}*/
-
 void setup() 
 {
   Serial.begin(115200);
@@ -176,8 +172,10 @@ void setup()
 
   //adc.begin(SS, MOSI, MISO, SCK);// Or use custom pins to use a software SPI interface.
   adc.begin(27,13,12,14);// Use the defined pins for SPI hardware interface.
-  pinMode (RIGHT_Element_Firing_Pin, OUTPUT);
-  pinMode (LEFT_Element_Firing_Pin, OUTPUT);
+  pinMode (HINGE_LEFT_Element_Firing_Pin, OUTPUT);
+  pinMode (HINGE_RIGHT_Element_Firing_Pin, OUTPUT);
+  pinMode (FRONT_LEFT_Element_Firing_Pin, OUTPUT);
+  pinMode (FRONT_RIGHT_Element_Firing_Pin, OUTPUT);
   pinMode (zero_cross, INPUT); 
   attachInterrupt(digitalPinToInterrupt(zero_cross), zero_crossing, RISING);  //
   /*Wire.begin(18, 19, 50000);  //Inner sensor
@@ -202,48 +200,24 @@ void loop()
     }
     
    }//end get voltage reading
-    
-    // SEND RESUEST TO Si7021 SENSORS 10 milliceconds BEFORE we want to read them
-/*  if (((currentMillis - previousMillis) >= (temp_read_Delay -10)) and !TempRequestSent) {
-     Wire.beginTransmission(ADDR);
-     Wire.write(MeasureTemp);
-     Wire.endTransmission();
-     Wire1.beginTransmission(ADDR);
-     Wire1.write(MeasureTemp);
-     Wire1.endTransmission();
-     TempRequestSent = true;
-  }*/
-
 
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
   if(currentMicros - previousMicros >= temp_read_Delay){
     previousMicros += temp_read_Delay;              //Increase the previous time for next loop
-   /* Wire.requestFrom(ADDR, 2);
-    if (Wire.available() <= 2); {
-      X0 = Wire.read();
-      X1 = Wire.read();
-      X0 = X0 << 8;
-      X_out = X0 + X1;
-    }
-    //Calculate temperature
-    X = (175.72 * X_out) / 65536;
-    Inner_Temp = X - 46.85;
 
-    Wire1.requestFrom(ADDR, 2);
-    if (Wire1.available() <= 2); {
-      X0 = Wire1.read();
-      X1 = Wire1.read();
-      X0 = X0 << 8;
-      X_out = X0 + X1;
-    }
-    //Calculate temperature
-    X = (175.72 * X_out) / 65536;
-    Outer_Temp = X - 46.85;*/
+    //We use Real_temp for the Hinge LEFT Warmer
+    real_temperature = GetTemp(21, 22) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    if(Old_Real_Temp == 0.00){
+      Old_Real_Temp = real_temperature;
+    } else{
+        if((abs(real_temperature - Old_Real_Temp)) > 5.00)
+          real_temperature = Old_Real_Temp;
+        else
+          Old_Real_Temp = real_temperature;
+      }
 
-
-    //We use Inner_temp for the Right side
+    //We use Inner_temp for the Hinge RIGHT Warmer
     Inner_Temp = GetTemp(18, 19) + 1.24;//GetTemp(18, 19);  
-    
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
     } else{
@@ -253,6 +227,8 @@ void loop()
           Old_Inner_Temp = Inner_Temp;
       }
 
+
+    //We use Outer_temp for the FRONT LEFT Warmer
     Outer_Temp = GetTemp(16, 17);
     if(Old_Outer_Temp == 0.00){
       Old_Outer_Temp = Outer_Temp;
@@ -263,24 +239,24 @@ void loop()
           Old_Outer_Temp = Outer_Temp;
       }
 
-    //We use Real_temp for the Left side
-    real_temperature = GetTemp(21, 22) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
-    if(Old_Real_Temp == 0.00){
-      Old_Real_Temp = real_temperature;
+
+    //We use Inner_temp for the FRONT RIGHT Warmer.
+    F_Right_Temp = GetTemp(X, X) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    if(Old_F_Right_Temp == 0.00){
+      Old_F_Right_Temp = F_Right_Temp;
     } else{
-        if((abs(real_temperature - Old_Real_Temp)) > 5.00)
-          real_temperature = Old_Real_Temp;
+        if((abs(F_Right_Temp - Old_F_Right_Temp)) > 5.00)
+          F_Right_Temp = Old_F_Right_Temp;
         else
-          Old_Real_Temp = real_temperature;
+          Old_F_Right_Temp = F_Right_Temp;
       }
-    
+
+        
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
     Time = micros();                    // actual time read
     elapsedTime = (Time - timePrev) / 1000000;   
         
-    // Left Warmer PID Control
-    
 //    //Preheating State
 //    if (real_temperature > 97)
 //      transition_state = 1;
@@ -295,6 +271,7 @@ void loop()
 //      kp = 1500; //Transitioning Kp in relation to Setpoint
 //    }
 
+    //this is for PID calculation for Hinge LEFT Warmer
     PID_error = setpoint - real_temperature;        //Calculate the pid ERROR
     if(PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       PID_i = 0;
@@ -312,61 +289,69 @@ void loop()
     if(PID_value > maximum_firing_delay)      
       PID_value = maximum_firing_delay; 
     previous_error = PID_error; //Remember to store the previous error.
+     // End of Hinge LEFT Warmer
 
-    // Right Warmer PID Control
-    
-//    //Preheating State
-//    if (Inner_Temp > 97)
-//      right_transition_state = 1;
-//    if (right_transition_state == 0){
-//      right_PID_error = 125 - Outer_Temp; 
-//      kp = 1000; //Transitioning Kp in relation to Setpoint
-//    }
-//    //Stablizing State
-//    if (right_transition_state == 1){
-//      right_previous_error = 0;
-//      right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
-//      kp = 1500; //Transitioning Kp in relation to Setpoint
-//    }
-
-    right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
-    if(right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-      right_PID_i = 0;
-    right_PID_p = kp * right_PID_error;                         //Calculate the P value
-    right_PID_i = right_PID_i + 0.5f * ki * elapsedTime * (right_PID_error + right_previous_error);              //Calculate the I value
+    //NEW.. this is for PID calculation for Hinge Right Warmer
+    hinge_right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
+    if(hinge_right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
+      hinge_right_PID_i = 0;
+    hinge_right_PID_p = kp * hinge_right_PID_error;                         //Calculate the P value
+    hinge_right_PID_i = hinge_right_PID_i + 0.5f * ki * elapsedTime * (hinge_right_PID_error + hinge_right_previous_error); //Calculate the I value
 
     //THIS NEW //Calculate the D value 
-    right_PID_d = -(2.0f*kd*(Inner_Temp-prev_Inner_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
+    hinge_right_PID_d = -(2.0f*kd*(Inner_Temp-prev_Inner_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     
     //PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
-    right_PID_value = right_PID_p + right_PID_i + right_PID_d; //Calculate total PID value
+    hinge_right_PID_value = hinge_right_PID_p + hinge_right_PID_i + hinge_right_PID_d; //Calculate total PID value
     //We define firing delay range between 0 and 9000.
-    if(right_PID_value < 0)      
-      right_PID_value = 0;       
-    if(right_PID_value > maximum_firing_delay)      
-      right_PID_value = maximum_firing_delay; 
-    right_previous_error = right_PID_error; //Remember to store the previous error.
+    if(hinge_right_PID_value < 0)      
+      hinge_right_PID_value = 0;       
+    if(hinge_right_PID_value > maximum_firing_delay)      
+      hinge_right_PID_value = maximum_firing_delay; 
+    hinge_right_previous_error = hinge_right_PID_error; //Remember to store the previous error.  
+    // End of Hinge Right Warmer
 
-    //FAN PID Control
-   /* FAN_PID_error = Outer_Temp - Inner_Temp;        //Calculate the pid ERROR as the difference between ths center and edge of ove
+    //NEW.. this is for PID calculation for Front Right Warmer
+    front_right_PID_error = setpoint - F_Right_Temp;        //Calculate the pid ERROR
+    if(front_right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
+      front_right_PID_i = 0;
+    front_right_PID_p = kp * front_right_PID_error;                         //Calculate the P value
+    front_right_PID_i = front_right_PID_i + 0.5f * ki * elapsedTime * (front_right_PID_error + front_right_previous_error); //Calculate the I value
 
-    if(FAN_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-      FAN_PID_i = 0;
-    FAN_PID_p = FAN_kp * FAN_PID_error;                         //Calculate the P value
-    FAN_PID_i = FAN_PID_i + (FAN_ki * FAN_PID_error);               //Calculate the I value 
-    FAN_PID_d = FAN_kd*((FAN_PID_error - FAN_previous_error)/elapsedTime); //Calculate the D value
-    FAN_PID_value = FAN_PID_p + FAN_PID_i + FAN_PID_d; //Calculate total PID value
-    if(FAN_PID_value < 0)      
-      FAN_PID_value = 0;       
-    if(FAN_PID_value > FAN_maximum_firing_delay)      
-      FAN_PID_value = FAN_maximum_firing_delay;    
-    FAN_previous_error = FAN_PID_error; //Remember to store the previous error.
-    TempRequestSent = false;  // THIS IS REQUIRED
-    //end new FAN PID code*/    
+    //THIS NEW //Calculate the D value 
+    front_right_PID_d = -(2.0f*kd*(F_Right_Temp - prev_F_Right_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     
-//  MAP FAN_PID_value to a FanSpeed  
-    FanSpeed = 11;//((FAN_maximum_firing_delay - FAN_PID_value) / 500) + 11; // this value will always be between 11 AND 25
- 
+    //PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
+    front_right_PID_value = front_right_PID_p + front_right_PID_i + front_right_PID_d; //Calculate total PID value
+    //We define firing delay range between 0 and 9000.
+    if(front_right_PID_value < 0)      
+      front_right_PID_value = 0;       
+    if(front_right_PID_value > maximum_firing_delay)      
+      front_right_PID_value = maximum_firing_delay; 
+    front_right_previous_error = front_right_PID_error; //Remember to store the previous error.  
+    // End of Front Right Warmer
+
+    //NEW.. this is for PID calculation for Front Left Warmer
+    front_left_PID_error = setpoint - Outer_Temp;        //Calculate the pid ERROR
+    if(front_left_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
+      front_left_PID_i = 0;
+    front_left_PID_p = kp * front_left_PID_error;                         //Calculate the P value
+    front_left_PID_i = front_left_PID_i + 0.5f * ki * elapsedTime * (front_left_PID_error + front_left_previous_error); //Calculate the I value
+
+    //THIS NEW //Calculate the D value 
+    front_left_PID_d = -(2.0f*kd*(Outer_Temp - prev_Outer_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
+    
+    //PID_d = kd*((PID_error - previous_error)/elapsedTime); Calculate the D value
+    front_left_PID_value = front_left_PID_p + front_left_PID_i + front_left_PID_d; //Calculate total PID value
+    //We define firing delay range between 0 and 9000.
+    if(front_left_PID_value < 0)      
+      front_left_PID_value = 0;       
+    if(front_left_PID_value > maximum_firing_delay)      
+      front_left_PID_value = maximum_firing_delay; 
+    front_left_previous_error = front_left_PID_error; //Remember to store the previous error.  
+    // End of Front Right Warmer
+    
+    
     //Print the values on the LCD
    /* Wire.begin(21,22,50000);
     lcd.clear();
@@ -381,14 +366,14 @@ void loop()
    TempRequestSent = false;  // THIS IS REQUIRED
    
     // Print the firing delay and the temps of the locations so we can graph them
-    Serial.print(", Heat Firing Delay L="  + String ((maximum_firing_delay - PID_value)/100.0));
-    Serial.print(",Heat Firing delay R=" +String((maximum_firing_delay - right_PID_value)/100.0));
-    Serial.print(", Heat Control Temp L=" + String(real_temperature)); 
-    Serial.print(", Heat Control Temp R=" + String(Inner_Temp ));
-    Serial.print(", Outer Temp=" + String(Outer_Temp )); 
-    /*Serial.print(", Fan Firing Delay=" + String(FAN_PID_value)); 
-    Serial.print(", Fan Speed =" + String(FanSpeed));     
-    Serial.print(", Error=" + String(FAN_PID_error)); */  // THIS IS THE DIFFERENCE IN TEMP BETWEEN THE OUTER AND INNER SENSOR THAT WE ARE TRYING TO REDUCE TO ZERO
+    Serial.print(", Heat Firing Delay HL="  + String ((maximum_firing_delay - PID_value)/100.0));
+    Serial.print(",Heat Firing Delay HR=" +String((maximum_firing_delay - hinge_right_PID_value)/100.0));
+    Serial.print(",Heat Firing Delay FR=" +String((maximum_firing_delay - front_right_PID_value)/100.0));
+    Serial.print(",Heat Firing Delay FL=" +String((maximum_firing_delay - front_left_PID_value)/100.0));
+    Serial.print(", Heat Control Temp HL=" + String(real_temperature)); 
+    Serial.print(", Heat Control Temp HR=" + String(Inner_Temp ));
+    Serial.print(", Heat Control Temp FR=" + String(F_Right_Temp ));
+    Serial.print(", Heat Control Temp FL=" + String(Outer_Temp )); 
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
@@ -397,10 +382,6 @@ void loop()
 //    Serial.print(", Tran_State L=" + String(transition_state)); 
 //    Serial.print(", Tran_State L=" + String(right_transition_state)); 
     Serial.print(", Voltage=" + String(volts));
-    /*Serial.print (", "+ String(PID_dArrayIndex));
-   for (int i=0; i<20; i++) {
-     Serial.print(", " + String(LastTwentyPID_d[i]));
-    }*/
     Serial.println();
   //This is new
   prev_real_temperature = real_temperature;
@@ -411,65 +392,36 @@ void loop()
   if (zero_cross_detected){
     Voltage_read = false;
     zero_cross_detected = false;
-    /*if (FanOn == true) {
-      if (FanCyclesOn > 0)
-        FanCyclesOn -= 1;
-      else {
-        FanOn = false;
-        FanCyclesOff = 25 - FanSpeed;
-        digitalWrite(RIGHT_Element_Firing_Pin, LOW);          
-      }
-    }  
-    else {
-      if (FanCyclesOff > 0)
-         FanCyclesOff -= 1;
-      else {
-         FanOn = true;
-         FanCyclesOn = FanSpeed;
-         digitalWrite(RIGHT_Element_Firing_Pin, HIGH);
-      } 
-    }*/
-
-   /* //Left Side Warmer PID
-    delayMicroseconds(maximum_firing_delay - PID_value); //This delay controls the power
-    digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-    delayMicroseconds(100);
-    digitalWrite(LEFT_Element_Firing_Pin,LOW);
     
-    //Right Side Warmer PID
-    delayMicroseconds(maximum_firing_delay - right_PID_value); //This delay controls the power
-    digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
-    delayMicroseconds(100);
-    digitalWrite(RIGHT_Element_Firing_Pin,LOW);*/
-
-    //Firing pulses for the left and right side warmer
-    left_firing_delay = maximum_firing_delay - PID_value;//Left Side Warmer firing delay
-    right_firing_delay = maximum_firing_delay - right_PID_value;//Right Side Warmer firing delay
-    
-    float left_right_delay_diff = left_firing_delay - right_firing_delay;
-    left_right_delay_diff = abs(left_right_delay_diff);
-
-    if (left_right_delay_diff <= 50){
-      delayMicroseconds(left_firing_delay);//This delay controls the power
-      digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-      digitalWrite(RIGHT_Element_Firing_Pin,HIGH);      
-    } else if (left_firing_delay < right_firing_delay) {
-        delayMicroseconds(left_firing_delay);//This delay controls the power
-        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-        delayMicroseconds(right_firing_delay - left_firing_delay);//This delay controls the power
-        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
-      } else if (right_firing_delay < left_firing_delay) {
-        delayMicroseconds(right_firing_delay);//This delay controls the power
-        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
-        delayMicroseconds(left_firing_delay - right_firing_delay);//This delay controls the power
-        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
-      }
+//    //Firing pulses for the left and right side warmer
+//    left_firing_delay = maximum_firing_delay - PID_value;//Left Side Warmer firing delay
+//    right_firing_delay = maximum_firing_delay - right_PID_value;//Right Side Warmer firing delay
+//    
+//    float left_right_delay_diff = left_firing_delay - right_firing_delay;
+//    left_right_delay_diff = abs(left_right_delay_diff);
+//
+//    if (left_right_delay_diff <= 50){
+//      delayMicroseconds(left_firing_delay);//This delay controls the power
+//      digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+//      digitalWrite(RIGHT_Element_Firing_Pin,HIGH);      
+//    } else if (left_firing_delay < right_firing_delay) {
+//        delayMicroseconds(left_firing_delay);//This delay controls the power
+//        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+//        delayMicroseconds(right_firing_delay - left_firing_delay);//This delay controls the power
+//        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
+//      } else if (right_firing_delay < left_firing_delay) {
+//        delayMicroseconds(right_firing_delay);//This delay controls the power
+//        digitalWrite(RIGHT_Element_Firing_Pin,HIGH);
+//        delayMicroseconds(left_firing_delay - right_firing_delay);//This delay controls the power
+//        digitalWrite(LEFT_Element_Firing_Pin,HIGH);
+//      }
       
     delayMicroseconds(100);
-    digitalWrite(LEFT_Element_Firing_Pin,LOW);
-    digitalWrite(RIGHT_Element_Firing_Pin,LOW);
+    digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
+    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
+    digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
+    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
 
-    
   } 
 }
 //End of void loop
