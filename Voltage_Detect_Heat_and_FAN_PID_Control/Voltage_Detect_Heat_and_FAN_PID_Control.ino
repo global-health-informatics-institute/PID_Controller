@@ -241,7 +241,7 @@ void loop()
 
 
     //We use Inner_temp for the FRONT RIGHT Warmer.
-    F_Right_Temp = GetTemp(26,2) + 4.99; //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    F_Right_Temp = GetTemp(23,26);//get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_F_Right_Temp == 0.00){
       Old_F_Right_Temp = F_Right_Temp;
     } else{
@@ -392,7 +392,8 @@ void loop()
   if (zero_cross_detected){
     Voltage_read = false;
     zero_cross_detected = false;
-    
+  } 
+      
   //HINGE LEFT WARMER CONTROL
   if((currentMicros - Last_Zero_Crossing_Time) > left_firing_delay)
     digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
@@ -416,6 +417,6 @@ void loop()
     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
   if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100,000))
     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);  
-  } 
+    
 }
 //End of void loop
