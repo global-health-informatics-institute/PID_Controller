@@ -206,7 +206,7 @@ void loop()
     previousMicros += temp_read_Delay;              //Increase the previous time for next loop
 
     //We use Real_temp for the Hinge LEFT Warmer
-    real_temperature = GetTemp(21, 22) + 4.99; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    real_temperature = GetTemp(18, 19) + 1.24; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
       Old_Real_Temp = real_temperature;
     } else{
@@ -217,7 +217,7 @@ void loop()
       }
 
     //We use Inner_temp for the Hinge RIGHT Warmer
-    Inner_Temp = GetTemp(18, 19) + 1.24;//GetTemp(18, 19);  
+    Inner_Temp = GetTemp(16, 17);//GetTemp(18, 19);  
     if(Old_Inner_Temp == 0.00){
       Old_Inner_Temp = Inner_Temp;
     } else{
@@ -229,7 +229,7 @@ void loop()
 
 
     //We use Outer_temp for the FRONT LEFT Warmer
-    Outer_Temp = GetTemp(16, 17);
+    Outer_Temp = GetTemp(21, 22) + 4.99;
     if(Old_Outer_Temp == 0.00){
       Old_Outer_Temp = Outer_Temp;
     } else{
@@ -309,6 +309,7 @@ void loop()
     if(hinge_right_PID_value > maximum_firing_delay)      
       hinge_right_PID_value = maximum_firing_delay; 
     hinge_right_previous_error = hinge_right_PID_error; //Remember to store the previous error.  
+    hinge_right_firing_delay = 9000;
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
@@ -392,31 +393,38 @@ void loop()
   if (zero_cross_detected){
     Voltage_read = false;
     zero_cross_detected = false;
+    
   } 
-      
+
+  left_firing_delay = maximum_firing_delay - PID_value;
+  hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
+  front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
+  front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
+  
   //HINGE LEFT WARMER CONTROL
   if((currentMicros - Last_Zero_Crossing_Time) > left_firing_delay)
     digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (left_firing_delay + 100,000))
+  if((currentMicros - Last_Zero_Crossing_Time) > (left_firing_delay + 100))
     digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW); 
 
   //HINGE RIGHT WARMER CONTROL
   if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
     digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100,000))
+  if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100))
     digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW); 
 
   //FRONT LEFT WARMER CONTROL
-  if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
-    digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100,000))
-    digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
+ if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
+   digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+ if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100))
+  digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
 
-  //FRONT RIGHT WARMER CONTROL
-  if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
+  //  //FRONT RIGHT WARMER CONTROL
+   if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100,000))
-    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);  
-    
+   if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
+     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);  
+  
+
 }
 //End of void loop
