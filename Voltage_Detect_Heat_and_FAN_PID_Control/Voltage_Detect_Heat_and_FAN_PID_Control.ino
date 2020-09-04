@@ -23,8 +23,8 @@ MCP3002 adc;
 //Inputs and outputs
 gpio_num_t HINGE_LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE HINGE LEFT WARMER TRIAC AS PER PCB LAYOUT
 gpio_num_t HINGE_RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE HINGE RIGHT WARMER  TRIAC AS PER PCB LAYOUT
-gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_4; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
-gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_25; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_26; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_15; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
 const int ADDR = 0x40;
@@ -241,7 +241,7 @@ void loop()
 
 
     //We use Inner_temp for the FRONT RIGHT Warmer.
-    F_Right_Temp = GetTemp(23,26);//get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    F_Right_Temp = GetTemp(4,25);//get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_F_Right_Temp == 0.00){
       Old_F_Right_Temp = F_Right_Temp;
     } else{
@@ -370,10 +370,10 @@ void loop()
     Serial.print(",Heat Firing Delay HR=" +String((maximum_firing_delay - hinge_right_PID_value)/100.0));
     Serial.print(",Heat Firing Delay FR=" +String((maximum_firing_delay - front_right_PID_value)/100.0));
     Serial.print(",Heat Firing Delay FL=" +String((maximum_firing_delay - front_left_PID_value)/100.0));
-    Serial.print(", Heat Control Temp HL=" + String(real_temperature)); 
-    Serial.print(", Heat Control Temp HR=" + String(Inner_Temp ));
-    Serial.print(", Heat Control Temp FR=" + String(F_Right_Temp ));
-    Serial.print(", Heat Control Temp FL=" + String(Outer_Temp )); 
+    Serial.print(",Temp HL=" + String(real_temperature)); 
+    Serial.print(",Temp HR=" + String(Inner_Temp ));
+    Serial.print(",Temp FR=" + String(F_Right_Temp ));
+    Serial.print(",Temp FL=" + String(Outer_Temp )); 
     Serial.print(", Set Point =" + String(setpoint));
     Serial.print(", PID_p=" + String(PID_p)); 
     Serial.print(", PID_i=" + String(PID_i)); 
