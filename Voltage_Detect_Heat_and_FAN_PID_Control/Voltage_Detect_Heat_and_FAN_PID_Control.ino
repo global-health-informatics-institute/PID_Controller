@@ -367,19 +367,19 @@ void loop()
    TempRequestSent = false;  // THIS IS REQUIRED
    
     // Print the firing delay and the temps of the locations so we can graph them
-    Serial.print(", Heat Firing Delay HL="  + String ((maximum_firing_delay - PID_value)/100.0));
-    Serial.print(",Heat Firing Delay HR=" +String((maximum_firing_delay - hinge_right_PID_value)/100.0));
-    Serial.print(",Heat Firing Delay FR=" +String((maximum_firing_delay - front_right_PID_value)/100.0));
-    Serial.print(",Heat Firing Delay FL=" +String((maximum_firing_delay - front_left_PID_value)/100.0));
+    Serial.print(",Firing Delay HL="  + String ((maximum_firing_delay - PID_value)/100.0));
+    Serial.print(",Firing Delay HR=" +String((maximum_firing_delay - hinge_right_PID_value)/100.0));
+    Serial.print(",Firing Delay FR=" +String((maximum_firing_delay - front_right_PID_value)/100.0));
+    Serial.print(",Firing Delay FL=" +String((maximum_firing_delay - front_left_PID_value)/100.0));
     Serial.print(",Temp HL=" + String(real_temperature)); 
     Serial.print(",Temp HR=" + String(Inner_Temp ));
     Serial.print(",Temp FR=" + String(F_Right_Temp ));
     Serial.print(",Temp FL=" + String(Outer_Temp )); 
     Serial.print(", Set Point =" + String(setpoint));
-    Serial.print(", PID_p=" + String(PID_p)); 
-    Serial.print(", PID_i=" + String(PID_i)); 
-    Serial.print(", PID_d=" + String(PID_d));
-    Serial.print(", Kp =" + String(kp)); 
+//    Serial.print(", PID_p=" + String(PID_p)); 
+//    Serial.print(", PID_i=" + String(PID_i)); 
+//    Serial.print(", PID_d=" + String(PID_d));
+//    Serial.print(", Kp =" + String(kp)); 
 //    Serial.print(", Tran_State L=" + String(transition_state)); 
 //    Serial.print(", Tran_State L=" + String(right_transition_state)); 
     Serial.print(", Voltage=" + String(volts));
@@ -394,37 +394,31 @@ void loop()
     Voltage_read = false;
     zero_cross_detected = false;
     
+    left_firing_delay = maximum_firing_delay - PID_value;
+    hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
+    front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
+    front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
+    
+    //HINGE LEFT WARMER CONTROL
+    if((currentMicros - Last_Zero_Crossing_Time) > left_firing_delay)
+      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
+    if((currentMicros - Last_Zero_Crossing_Time) > (left_firing_delay + 100))
+      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW); 
+    //HINGE RIGHT WARMER CONTROL
+    if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
+      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
+    if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100))
+      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW); 
+    //FRONT LEFT WARMER CONTROL
+    if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
+      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+    if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100))
+     digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
+    //  //FRONT RIGHT WARMER CONTROL
+    if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
+     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+    if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
+      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);    
   } 
-
-  left_firing_delay = maximum_firing_delay - PID_value;
-  hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
-  front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
-  front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
-  
-  //HINGE LEFT WARMER CONTROL
-  if((currentMicros - Last_Zero_Crossing_Time) > left_firing_delay)
-    digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (left_firing_delay + 100))
-    digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW); 
-
-  //HINGE RIGHT WARMER CONTROL
-  if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
-    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
-  if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100))
-    digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW); 
-
-  //FRONT LEFT WARMER CONTROL
- if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
-   digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
- if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100))
-  digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
-
-  //  //FRONT RIGHT WARMER CONTROL
-   if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
-    digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-   if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
-     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);  
-  
-
 }
 //End of void loop
