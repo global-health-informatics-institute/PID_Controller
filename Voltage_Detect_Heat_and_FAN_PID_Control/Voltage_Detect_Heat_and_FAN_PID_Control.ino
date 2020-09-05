@@ -391,8 +391,7 @@ void loop()
   //If the zero cross interruption was detected we create the 100us firing pulse  
   if (zero_cross_detected){
     Voltage_read = false;
-    zero_cross_detected = false;
-     
+    zero_cross_detected = false;   
   } 
 //      left_firing_delay = maximum_firing_delay - PID_value;
 //    hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
