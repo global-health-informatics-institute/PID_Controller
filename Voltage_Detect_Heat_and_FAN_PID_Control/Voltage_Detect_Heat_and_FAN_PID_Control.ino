@@ -23,7 +23,7 @@ MCP3002 adc;
 //Inputs and outputs
 gpio_num_t HINGE_LEFT_Element_Firing_Pin = GPIO_NUM_33; // THIS IS FOR THE HINGE LEFT WARMER TRIAC AS PER PCB LAYOUT
 gpio_num_t HINGE_RIGHT_Element_Firing_Pin = GPIO_NUM_32; // THIS IS FOR THE HINGE RIGHT WARMER  TRIAC AS PER PCB LAYOUT
-gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_26; // THIS IS FOR THE FRONTLEFT WARMER TRIAC AS PER PCB LAYOUT
+gpio_num_t FRONT_LEFT_Element_Firing_Pin = GPIO_NUM_26; // THIS IS FOR THE FRONT LEFT WARMER TRIAC AS PER PCB LAYOUT
 gpio_num_t FRONT_RIGHT_Element_Firing_Pin = GPIO_NUM_15; // THIS IS FOR THE FRONT RIGHT WARMER  TRIAC AS PER PCB LAYOUT
 gpio_num_t zero_cross = GPIO_NUM_35; // THIS IS FOR THE ZERO CROSSING DETECTION AS PER PCB LAYOUT  *** CHANGED TO GPIO25 to match PCB ***
 
@@ -310,7 +310,6 @@ void loop()
     if(hinge_right_PID_value > maximum_firing_delay)      
       hinge_right_PID_value = maximum_firing_delay; 
     hinge_right_previous_error = hinge_right_PID_error; //Remember to store the previous error.  
-    hinge_right_firing_delay = 9000;
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
@@ -421,7 +420,7 @@ void loop()
     if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
     if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
-     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW); 
- 
+     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+
 }
 //End of void loop
