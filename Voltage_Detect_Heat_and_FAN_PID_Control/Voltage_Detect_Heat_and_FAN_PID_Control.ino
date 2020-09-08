@@ -44,7 +44,7 @@ const int maximum_firing_delay = 9000;
 //unsigned long previousMillis = 0; 
 //unsigned long currentMillis = 0;
 int temp_read_Delay = 500000;
-int setpoint = 20;
+int setpoint = 60;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 unsigned long elapsedTime, Time, timePrev;
@@ -161,6 +161,7 @@ float GetPidValue(int PID_p, float PID_i, int PID_d, float Prev_error, double Cu
     PID_p = kp * PID_error;             //Calculate the P value
     PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + Prev_error); //Calculate the I value
     PID_d = -(2.0f*kd*(CurrentTemp-prevTemp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);  //Calculate the D value 
+    PID_value = PID_p + PID_i + PID_d; //Calculate total PID value
     
     //We define firing delay range between 0 and 9000.
     if(PID_value < 0)      
@@ -311,7 +312,7 @@ void loop()
 
     //NEW.. this is for PID calculation for Front Right Warmer
     front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, F_Right_Temp, prev_F_Right_Temp);
-    prev_F_Right_Temp = Prev_PID_error;
+    front_right_previous_error = Prev_PID_error;
     // End of Front Right Warmer
 
     //NEW.. this is for PID calculation for Front Left Warmer
