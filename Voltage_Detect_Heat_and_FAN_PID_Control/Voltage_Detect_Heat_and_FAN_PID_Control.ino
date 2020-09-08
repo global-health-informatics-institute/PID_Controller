@@ -63,16 +63,16 @@ float LastFiftyVolts[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 int VoltsArrayIndex = 0;
 
 //OVEN Temp values
-double Outer_Temp, Inner_Temp, F_Right_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
-double real_temperature = 0.00;
-double Old_Inner_Temp = 0.00;
-double Old_Outer_Temp = 0.00;
+double Front_Left_Temp, Hinge_Right_Temp, Front_Right_Temp;  // These hold the values of the two temp sensors we will use for PID control. 
+double Hinge_Left_Temp = 0.00;
+double Old_Hinge_Right_Temp = 0.00;
+double Old_Front_Left_Temp = 0.00;
 double Old_Real_Temp = 0.00; 
-double Old_F_Right_Temp = 0.00; 
-double prev_real_temperature; //record previous measurement
-double prev_F_Right_Temp;//record previous measurement
-double prev_Outer_Temp; //record previous measurement
-double prev_Inner_Temp ; //record previous measurement
+double Old_Front_Right_Temp = 0.00; 
+double prev_Hinge_Left_Temp; //record previous measurement
+double prev_Front_Right_Temp;//record previous measurement
+double prev_Front_Left_Temp; //record previous measurement
+double prev_Hinge_Right_Temp ; //record previous measurement
 
 //PID constants
 int kp =2500;   float ki = 0;   int kd = 0;
@@ -194,7 +194,7 @@ void setup()
 {
   Serial.begin(115200);
 //  lcd.begin(); //Begin the LCD communication through I2C
-//  lcd.backlight();  //Turn on backlight for LCD
+//  lcd.backlight();  //Turn on backlight forHinge_Left_Temp LCD
 
   //adc.begin(SS, MOSI, MISO, SCK);// Or use custom pins to use a software SPI interface.
   adc.begin(27,13,12,14);// Use the defined pins for SPI hardware interface.
@@ -228,47 +228,47 @@ void loop()
     previousMicros += temp_read_Delay;              //Increase the previous time for next loop
 
     //We use Real_temp for the Hinge LEFT Warmer
-    real_temperature = GetTemp(18, 19) + 1.24; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    Hinge_Left_Temp = GetTemp(18, 19) + 1.24; //GetTemp(21, 22);   //get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
     if(Old_Real_Temp == 0.00){
-      Old_Real_Temp = real_temperature;
+      Old_Real_Temp = Hinge_Left_Temp;
     } else{
-        if((abs(real_temperature - Old_Real_Temp)) > 5.00)
-          real_temperature = Old_Real_Temp;
+        if((abs(Hinge_Left_Temp - Old_Real_Temp)) > 5.00)
+          Hinge_Left_Temp = Old_Real_Temp;
         else
-          Old_Real_Temp = real_temperature;
+          Old_Real_Temp = Hinge_Left_Temp;
       }
 
-    //We use Inner_temp for the Hinge RIGHT Warmer
-    Inner_Temp = GetTemp(16, 17);//GetTemp(18, 19);  
-    if(Old_Inner_Temp == 0.00){
-      Old_Inner_Temp = Inner_Temp;
+    //We use Hinge_Right_Temp for the Hinge RIGHT Warmer
+    Hinge_Right_Temp = GetTemp(16, 17);//GetTemp(18, 19);  
+    if(Old_Hinge_Right_Temp == 0.00){
+      Old_Hinge_Right_Temp = Hinge_Right_Temp;
     } else{
-        if((abs(Inner_Temp - Old_Inner_Temp)) > 5.00)
-          Inner_Temp = Old_Inner_Temp;
+        if((abs(Hinge_Right_Temp - Old_Hinge_Right_Temp)) > 5.00)
+          Hinge_Right_Temp = Old_Hinge_Right_Temp;
         else
-          Old_Inner_Temp = Inner_Temp;
+          Old_Hinge_Right_Temp = Hinge_Right_Temp;
       }
 
-    //We use Outer_temp for the FRONT LEFT Warmer
-    Outer_Temp = GetTemp(21, 22) + 4.99;
-    if(Old_Outer_Temp == 0.00){
-      Old_Outer_Temp = Outer_Temp;
+    //We use Front_Left_Temp for the FRONT LEFT Warmer
+    Front_Left_Temp = GetTemp(21, 22) + 4.99;
+    if(Old_Front_Left_Temp == 0.00){
+      Old_Front_Left_Temp = Front_Left_Temp;
     } else{
-        if((abs(Outer_Temp - Old_Outer_Temp)) > 5.00)
-          Outer_Temp = Old_Outer_Temp;
+        if((abs(Front_Left_Temp - Old_Front_Left_Temp)) > 5.00)
+          Front_Left_Temp = Old_Front_Left_Temp;
         else
-          Old_Outer_Temp = Outer_Temp;
+          Old_Front_Left_Temp = Front_Left_Temp;
       }
 
-    //We use Inner_temp for the FRONT RIGHT Warmer.
-    F_Right_Temp = GetTemp(4,25);//get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
-    if(Old_F_Right_Temp == 0.00){
-      Old_F_Right_Temp = F_Right_Temp;
+    //We use the 4th sensor for the FRONT RIGHT Warmer.
+    Front_Right_Temp = GetTemp(4,25);//get Element PID Control Temperature : NOW COntrolled by Middle Cell Temperature for testing
+    if(Old_Front_Right_Temp == 0.00){
+      Old_Front_Right_Temp = Front_Right_Temp;
     } else{
-        if((abs(F_Right_Temp - Old_F_Right_Temp)) > 5.00)
-          F_Right_Temp = Old_F_Right_Temp;
+        if((abs(Front_Right_Temp - Old_Front_Right_Temp)) > 5.00)
+          Front_Right_Temp = Old_Front_Right_Temp;
         else
-          Old_F_Right_Temp = F_Right_Temp;
+          Old_Front_Right_Temp = Front_Right_Temp;
       }
       
     //Time Tracking
@@ -277,18 +277,18 @@ void loop()
     elapsedTime = (Time - timePrev) / 1000000;   
 
     //this is for PID calculation for Hinge LEFT Warmer
-    hinge_left_PID_value = GetPidValue(hinge_left_PID_p, hinge_left_PID_i, hinge_left_PID_d, hinge_left_previous_error, real_temperature, prev_real_temperature);
+    hinge_left_PID_value = GetPidValue(hinge_left_PID_p, hinge_left_PID_i, hinge_left_PID_d, hinge_left_previous_error, Hinge_Left_Temp, prev_Hinge_Left_Temp);
     hinge_left_previous_error = Prev_PID_error;
      // End of Hinge LEFT Warmer
 
     //NEW.. this is for PID calculation for Hinge Right Warmer
-    hinge_right_PID_error = setpoint - Inner_Temp;        //Calculate the pid ERROR
+    hinge_right_PID_error = setpoint - Hinge_Right_Temp;        //Calculate the pid ERROR
     if(hinge_right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
       hinge_right_PID_i = 0;
     hinge_right_PID_p = kp * hinge_right_PID_error;                         //Calculate the P value
     hinge_right_PID_i = hinge_right_PID_i + 0.5f * ki * elapsedTime * (hinge_right_PID_error + hinge_right_previous_error); //Calculate the I value
     //THIS NEW //Calculate the D value 
-    hinge_right_PID_d = -(2.0f*kd*(Inner_Temp-prev_Inner_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
+    hinge_right_PID_d = -(2.0f*kd*(Hinge_Right_Temp-prev_Hinge_Right_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
     hinge_right_PID_value = hinge_right_PID_p + hinge_right_PID_i + hinge_right_PID_d; //Calculate total PID value
     //We define firing delay range between 0 and 9000.
     if(hinge_right_PID_value < 0)      
@@ -299,12 +299,12 @@ void loop()
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
-    front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, F_Right_Temp, prev_F_Right_Temp);
+    front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, Front_Right_Temp, prev_Front_Right_Temp);
     front_right_previous_error = Prev_PID_error;
     // End of Front Right Warmer
 
     //NEW.. this is for PID calculation for Front Left Warmer    
-     front_left_PID_value = GetPidValue(front_left_PID_p, front_left_PID_i, front_left_PID_d, front_left_previous_error, Outer_Temp, prev_Outer_Temp);
+     front_left_PID_value = GetPidValue(front_left_PID_p, front_left_PID_i, front_left_PID_d, front_left_previous_error, Front_Left_Temp, prev_Front_Left_Temp);
      front_left_previous_error = Prev_PID_error;
     // End of Front Right Warmer
     
@@ -319,7 +319,7 @@ void loop()
     lcd.setCursor(0,1);
     lcd.print("Real temp: ");
     lcd.setCursor(11,1);
-    lcd.print(real_temperature);*/
+    lcd.print(Hinge_Left_Temp);*/
     TempRequestSent = false;  // THIS IS REQUIRED
    
     // Print the firing delay and the temps of the locations so we can graph them
@@ -327,10 +327,10 @@ void loop()
     Serial.print(",Firing Delay HR=" +String((maximum_firing_delay - hinge_right_PID_value)/100.0));
     Serial.print(",Firing Delay FR=" +String((maximum_firing_delay - front_right_PID_value)/100.0));
     Serial.print(",Firing Delay FL=" +String((maximum_firing_delay - front_left_PID_value)/100.0));
-    Serial.print(",Temp HL=" + String(real_temperature)); 
-    Serial.print(",Temp HR=" + String(Inner_Temp ));
-    Serial.print(",Temp FR=" + String(F_Right_Temp ));
-    Serial.print(",Temp FL=" + String(Outer_Temp )); 
+    Serial.print(",Temp HL=" + String(Hinge_Left_Temp)); 
+    Serial.print(",Temp HR=" + String(Hinge_Right_Temp ));
+    Serial.print(",Temp FR=" + String(Front_Right_Temp ));
+    Serial.print(",Temp FL=" + String(Front_Left_Temp )); 
     Serial.print(", Set Point =" + String(setpoint));
 //    Serial.print(", PID_p=" + String(PID_p)); 
 //    Serial.print(", PID_i=" + String(PID_i)); 
@@ -341,7 +341,7 @@ void loop()
     Serial.print(", Voltage=" + String(volts));
     Serial.println();
   //This is new
-    prev_real_temperature = real_temperature;
+    prev_Hinge_Left_Temp = Hinge_Left_Temp;
   }  
   
   //If the zero cross interruption was detected we create the 100us firing pulse  
