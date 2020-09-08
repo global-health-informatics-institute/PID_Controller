@@ -77,6 +77,8 @@ double prev_Inner_Temp ; //record previous measurement
 //PID constants
 int kp =2500;   float ki = 0;   int kd = 0;
 
+float Prev_PID_error; //used to store PID error for use in next calculation.
+
 //NEW HINGE LEFT Warmer Contol values
 //PID variables
 float hinge_left_PID_error = 0;
@@ -101,7 +103,7 @@ int hinge_right_PID_p = 0;    float hinge_right_PID_i = 0;    int hinge_right_PI
 
 //NEW FRONT RIGHT Warmer Contol values
 //PID variables
-float front_right_PID_error = 0;
+//float front_right_PID_error = 0;
 float front_right_previous_error = 0;
 float front_right_PID_value = 0;
 int front_right_firing_delay = 0;
@@ -147,6 +149,28 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
   X=(175.72*X_out)/65536;
   X=X-46.85;
   return X;
+}
+
+//PID value calculation
+float GetPidValue(int PID_p, float PID_i, int PID_d, float Prev_error, double CurrentTemp, double prevTemp) {
+    float PID_error = 0; float PID_value = 0;
+
+    PID_error = setpoint - CurrentTemp; //Calculate the pid ERROR
+    if(PID_error > 30)                  //integral constant will only affect errors below 30ºC    
+      PID_i = 0;
+    PID_p = kp * PID_error;             //Calculate the P value
+    PID_i = PID_i + 0.5f * ki * elapsedTime * (PID_error + Prev_error); //Calculate the I value
+    PID_d = -(2.0f*kd*(CurrentTemp-prevTemp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);  //Calculate the D value 
+    
+    //We define firing delay range between 0 and 9000.
+    if(PID_value < 0)      
+      PID_value = 0;       
+    if(PID_value > maximum_firing_delay)      
+      PID_value = maximum_firing_delay; 
+    Prev_error = PID_error; //Remember to store the previous error.
+    Prev_PID_error = Prev_error;
+
+    return PID_value;    
 }
 
 //Voltagae averaging
@@ -286,20 +310,8 @@ void loop()
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
-    front_right_PID_error = setpoint - F_Right_Temp;        //Calculate the pid ERROR
-    if(front_right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-      front_right_PID_i = 0;
-    front_right_PID_p = kp * front_right_PID_error;                         //Calculate the P value
-    front_right_PID_i = front_right_PID_i + 0.5f * ki * elapsedTime * (front_right_PID_error + front_right_previous_error); //Calculate the I value
-    //THIS NEW //Calculate the D value 
-    front_right_PID_d = -(2.0f*kd*(F_Right_Temp - prev_F_Right_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
-    front_right_PID_value = front_right_PID_p + front_right_PID_i + front_right_PID_d; //Calculate total PID value
-    //We define firing delay range between 0 and 9000.
-    if(front_right_PID_value < 0)      
-      front_right_PID_value = 0;       
-    if(front_right_PID_value > maximum_firing_delay)      
-      front_right_PID_value = maximum_firing_delay; 
-    front_right_previous_error = front_right_PID_error; //Remember to store the previous error.  
+    front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, F_Right_Temp, prev_F_Right_Temp);
+    prev_F_Right_Temp = Prev_PID_error;
     // End of Front Right Warmer
 
     //NEW.. this is for PID calculation for Front Left Warmer
@@ -365,11 +377,11 @@ void loop()
     front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
     front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
     
-    //HINGE LEFT WARMER CONTROL
-    if((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay)
-      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
-    if((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100))
-      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
+//    //HINGE LEFT WARMER CONTROL
+//    if((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay)
+//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
+//    if((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100))
+//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
       
 //    HINGE RIGHT WARMER CONTROL
 //    if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
@@ -383,11 +395,11 @@ void loop()
 //    if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100))
 //     digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
 
-//    //FRONT RIGHT WARMER CONTROL
-//    if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
-//     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-//    if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
-//     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+    //FRONT RIGHT WARMER CONTROL
+    if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
+     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+    if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
+     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
 
 }
 //End of void loop
