@@ -40,6 +40,10 @@ int last_CH1_state = 0;
 bool zero_cross_detected = false;
 bool TempRequestSent = false; // THIS IS NEW
 bool LFPS = true; //used to control when to send the firing pulse
+bool LHPS = true; //used to control when to send the firing pulse
+bool RFPS = true; //used to control when to send the firing pulse
+bool RHPS = true; //used to control when to send the firing pulse
+
 const int maximum_firing_delay = 9500;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 //unsigned long previousMillis = 0; 
@@ -132,6 +136,9 @@ void IRAM_ATTR zero_crossing()
   zero_cross_detected = true; 
   Last_Zero_Crossing_Time = micros(); 
   LFPS = false;
+  LHPS = false; 
+  RFPS = false; 
+  RHPS = false;
  }  
 }
 
@@ -345,22 +352,22 @@ void loop()
     front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
 
 // ////    HINGE LEFT WARMER CONTROL
-//   if (!LFPS) {
+//   if (!LHPS) {
 //    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && (!gpio_get_level(HINGE_LEFT_Element_Firing_Pin)))
 //      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
 //    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && (gpio_get_level(HINGE_LEFT_Element_Firing_Pin))) {
 //      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
-//      LFPS = true;
+//      LHPS = true;
 //    }
 //  }
 //  
 //////    HINGE RIGHT WARMER CONTROL
-//   if (!LFPS) {
+//   if (!RHPS) {
 //    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && (!gpio_get_level(HINGE_RIGHT_Element_Firing_Pin)))
 //      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
 //    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && (gpio_get_level(HINGE_RIGHT_Element_Firing_Pin))) {
 //      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
-//      LFPS = true;
+//      RHPS = true;
 //    }
 //  }
 
@@ -375,14 +382,14 @@ void loop()
   }
 
  //    //FRONT RIGHT WARMER CONTROL
-   if (!LFPS) {
+   if (!RFPS) {
     if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && (!gpio_get_level(FRONT_RIGHT_Element_Firing_Pin)))
       digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
     if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && (gpio_get_level(FRONT_RIGHT_Element_Firing_Pin))) {
       digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
-      LFPS = true;
+      RFPS = true;
     }
-  }  
+  }
 
       //micros() = micros();
 }
