@@ -39,12 +39,13 @@ float tau = 0.02;
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
 bool TempRequestSent = false; // THIS IS NEW
-const int maximum_firing_delay = 9000;
+bool LFPS = true; //used to control when to send the firing pulse
+const int maximum_firing_delay = 9500;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 //unsigned long previousMillis = 0; 
 //unsigned long currentMillis = 0;
 int temp_read_Delay = 500000;
-int setpoint = 60;
+int setpoint = 20;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 unsigned long elapsedTime, Time, timePrev;
@@ -75,7 +76,7 @@ double prev_Front_Left_Temp; //record previous measurement
 double prev_Hinge_Right_Temp ; //record previous measurement
 
 //PID constants
-int kp =2500;   float ki = 0;   int kd = 0;
+int kp =1000;   float ki = 0;   int kd = 0;
 
 float Prev_PID_error; //used to store PID error for use in next calculation.
 
@@ -130,6 +131,7 @@ void IRAM_ATTR zero_crossing()
  if (gpio_get_level(zero_cross)){ 
   zero_cross_detected = true; 
   Last_Zero_Crossing_Time = micros(); 
+  LFPS = false;
  }  
 }
 
@@ -212,7 +214,7 @@ void loop()
   currentMicros = micros(); 
 
   //get voltage reading
-   if (((currentMicros - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
+   if (((micros() - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
     Voltage_read = true;
     volt_reading = adc.analogRead(0) / 1024.0*420*0.7071;
     if(volt_reading > 50) {
@@ -224,7 +226,7 @@ void loop()
    }//end get voltage reading
 
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
-  if(currentMicros - previousMicros >= temp_read_Delay){
+  if(micros() - previousMicros >= temp_read_Delay){
     previousMicros += temp_read_Delay;              //Increase the previous time for next loop
 
     //We use Real_temp for the Hinge LEFT Warmer
@@ -250,7 +252,7 @@ void loop()
       }
 
     //We use Front_Left_Temp for the FRONT LEFT Warmer
-    Front_Left_Temp = GetTemp(21, 22) + 4.99;
+    Front_Left_Temp = GetTemp(21, 22)+ 4.99;
     if(Old_Front_Left_Temp == 0.00){
       Old_Front_Left_Temp = Front_Left_Temp;
     } else{
@@ -281,21 +283,9 @@ void loop()
     hinge_left_previous_error = Prev_PID_error;
      // End of Hinge LEFT Warmer
 
-    //NEW.. this is for PID calculation for Hinge Right Warmer
-    hinge_right_PID_error = setpoint - Hinge_Right_Temp;        //Calculate the pid ERROR
-    if(hinge_right_PID_error > 30)                              //integral constant will only affect errors below 30ºC             
-      hinge_right_PID_i = 0;
-    hinge_right_PID_p = kp * hinge_right_PID_error;                         //Calculate the P value
-    hinge_right_PID_i = hinge_right_PID_i + 0.5f * ki * elapsedTime * (hinge_right_PID_error + hinge_right_previous_error); //Calculate the I value
-    //THIS NEW //Calculate the D value 
-    hinge_right_PID_d = -(2.0f*kd*(Hinge_Right_Temp-prev_Hinge_Right_Temp) + (2.0f*tau - elapsedTime)) / (2.0f * tau + elapsedTime);
-    hinge_right_PID_value = hinge_right_PID_p + hinge_right_PID_i + hinge_right_PID_d; //Calculate total PID value
-    //We define firing delay range between 0 and 9000.
-    if(hinge_right_PID_value < 0)      
-      hinge_right_PID_value = 0;       
-    if(hinge_right_PID_value > maximum_firing_delay)      
-      hinge_right_PID_value = maximum_firing_delay; 
-    hinge_right_previous_error = hinge_right_PID_error; //Remember to store the previous error.  
+    //NEW.. this is for PID calculation for Hinge Right Warmer             
+    hinge_right_PID_value = GetPidValue(hinge_right_PID_p, hinge_right_PID_i, hinge_right_PID_d, hinge_right_previous_error, Hinge_Right_Temp, prev_Hinge_Right_Temp);//Calculate total PID value
+    hinge_right_previous_error = Prev_PID_error;          //integral constant will only affect errors below 30ºC
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
@@ -353,30 +343,47 @@ void loop()
     hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
     front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
     front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
-    
-    //HINGE LEFT WARMER CONTROL
-    if((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay)
-      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
-    if((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100))
-      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
-      
-//    HINGE RIGHT WARMER CONTROL
-//    if((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay)
+
+// ////    HINGE LEFT WARMER CONTROL
+//   if (!LFPS) {
+//    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && (!gpio_get_level(HINGE_LEFT_Element_Firing_Pin)))
+//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
+//    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && (gpio_get_level(HINGE_LEFT_Element_Firing_Pin))) {
+//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
+//      LFPS = true;
+//    }
+//  }
+//  
+//////    HINGE RIGHT WARMER CONTROL
+//   if (!LFPS) {
+//    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && (!gpio_get_level(HINGE_RIGHT_Element_Firing_Pin)))
 //      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
-//    if((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100))
-//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW); 
+//    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && (gpio_get_level(HINGE_RIGHT_Element_Firing_Pin))) {
+//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
+//      LFPS = true;
+//    }
+//  }
 
-//    //FRONT LEFT WARMER CONTROL
-//    if((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay)
-//     digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
-//    if((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100))
-//     digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);  
+  //    //FRONT LEFT WARMER CONTROL
+   if (!LFPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && (!gpio_get_level(FRONT_LEFT_Element_Firing_Pin)))
+      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && (gpio_get_level(FRONT_LEFT_Element_Firing_Pin))) {
+      digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
+      LFPS = true;
+    }
+  }
 
-    //FRONT RIGHT WARMER CONTROL
-    if((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay)
-     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-    if((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100))
-     digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+ //    //FRONT RIGHT WARMER CONTROL
+   if (!LFPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && (!gpio_get_level(FRONT_RIGHT_Element_Firing_Pin)))
+      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && (gpio_get_level(FRONT_RIGHT_Element_Firing_Pin))) {
+      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+      LFPS = true;
+    }
+  }  
 
+      //micros() = micros();
 }
 //End of void loop
