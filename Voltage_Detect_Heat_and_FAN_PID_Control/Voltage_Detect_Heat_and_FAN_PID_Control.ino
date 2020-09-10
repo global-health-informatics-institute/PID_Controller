@@ -39,14 +39,14 @@ float tau = 0.02;
 int last_CH1_state = 0;
 bool zero_cross_detected = false;
 bool TempRequestSent = false; // THIS IS NEW
-bool LFPS = true; //used to control when to send the firing pulse
-bool LHPS = true; //used to control when to send the firing pulse
-bool RFPS = true; //used to control when to send the firing pulse
-bool RHPS = true; //used to control when to send the firing pulse
-bool RFOn;
-bool LFOn;
-bool RHOn;
-bool LHOn;
+bool LFPS = false; //used to control when to send the firing pulse
+bool LHPS = false; //used to control when to send the firing pulse
+bool RFPS = false; //used to control when to send the firing pulse
+bool RHPS = false; //used to control when to send the firing pulse
+bool RFOn = false;
+bool LFOn = false;
+bool RHOn = false;
+bool LHOn = false;
 
 const int maximum_firing_delay = 9500;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
@@ -355,36 +355,32 @@ void loop()
     front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
     front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
 
-// ////    HINGE LEFT WARMER CONTROL
-//   if (!LHPS) {
-//    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && (!gpio_get_level(HINGE_LEFT_Element_Firing_Pin)))
-//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
-//    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && (gpio_get_level(HINGE_LEFT_Element_Firing_Pin))) {
-//      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
-//      LHPS = true;
-//    }
-//  }
-//  
-//////    HINGE RIGHT WARMER CONTROL
-//   if (!RHPS) {
-//    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && (!gpio_get_level(HINGE_RIGHT_Element_Firing_Pin)))
-//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
-//    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && (gpio_get_level(HINGE_RIGHT_Element_Firing_Pin))) {
-//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
-//      RHPS = true;
-//    }
-//  }
+//    //HINGE LEFT WARMER CONTROL
+if (!LHPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && !LHOn) {
+      digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
+      LHOn = true;
+    }  
+    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && LHOn) {
+      digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
+      LHOn = false;
+      LHPS = true;
+    }
+  }
 
-//  //    //FRONT LEFT WARMER CONTROL
-//   if (!LFPS) {
-//    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && (!gpio_get_level(FRONT_LEFT_Element_Firing_Pin)))
-//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
-//    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && (gpio_get_level(FRONT_LEFT_Element_Firing_Pin))) {
-//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
-//      LFPS = true;
-//    }
-//  }
-
+//    //HINGE RIGHT WARMER CONTROLL
+if (!RHPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && !RHOn) {
+      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
+      RHOn = true;
+    }  
+    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && RHOn) {
+      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
+      RHOn = false;
+      RHPS = true;
+    }
+  }
+  
 //    //FRONT LEFT WARMER CONTROL
 if (!LFPS) {
     if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && !LFOn) {
@@ -410,16 +406,6 @@ if (!RFPS) {
       RFPS = true;
     }
   }
-
-// //    //FRONT RIGHT WARMER CONTROL
-//   if (!RFPS) {
-//    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && (!gpio_get_level(FRONT_RIGHT_Element_Firing_Pin)))
-//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-//    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && (gpio_get_level(FRONT_RIGHT_Element_Firing_Pin))) {
-//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
-//      RFPS = true;
-//    }
-//  }
 
       //micros() = esp_timer_get_time();
 }
