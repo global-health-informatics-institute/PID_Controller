@@ -43,13 +43,17 @@ bool LFPS = true; //used to control when to send the firing pulse
 bool LHPS = true; //used to control when to send the firing pulse
 bool RFPS = true; //used to control when to send the firing pulse
 bool RHPS = true; //used to control when to send the firing pulse
+bool RFOn;
+bool LFOn;
+bool RHOn;
+bool LHOn;
 
 const int maximum_firing_delay = 9500;
 // Max firing delay set to 9ms based on AC frequency of 50Hz
 //unsigned long previousMillis = 0; 
 //unsigned long currentMillis = 0;
 int temp_read_Delay = 500000;
-int setpoint = 20;
+int setpoint = 50;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 unsigned long elapsedTime, Time, timePrev;
@@ -134,7 +138,7 @@ void IRAM_ATTR zero_crossing()
  delayMicroseconds(10);
  if (gpio_get_level(zero_cross)){ 
   zero_cross_detected = true; 
-  Last_Zero_Crossing_Time = micros(); 
+  Last_Zero_Crossing_Time = esp_timer_get_time(); 
   LFPS = false;
   LHPS = false; 
   RFPS = false; 
@@ -218,10 +222,10 @@ void setup()
 void loop() 
 {   
   /*currentMillis = millis();           //Save the value of time before the loop8*/
-  currentMicros = micros(); 
+  currentMicros = esp_timer_get_time(); 
 
   //get voltage reading
-   if (((micros() - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
+   if (((esp_timer_get_time() - Last_Zero_Crossing_Time) >= voltage_read_Delay) && (!Voltage_read)) {
     Voltage_read = true;
     volt_reading = adc.analogRead(0) / 1024.0*420*0.7071;
     if(volt_reading > 50) {
@@ -233,7 +237,7 @@ void loop()
    }//end get voltage reading
 
   // We create this if so we will read the temperature and change values each "temp_read_Delay"
-  if(micros() - previousMicros >= temp_read_Delay){
+  if(esp_timer_get_time() - previousMicros >= temp_read_Delay){
     previousMicros += temp_read_Delay;              //Increase the previous time for next loop
 
     //We use Real_temp for the Hinge LEFT Warmer
@@ -282,7 +286,7 @@ void loop()
       
     //Time Tracking
     timePrev = Time;                    // the previous time is stored before the actual time read
-    Time = micros();                    // actual time read
+    Time = esp_timer_get_time();                    // actual time read
     elapsedTime = (Time - timePrev) / 1000000;   
 
     //this is for PID calculation for Hinge LEFT Warmer
@@ -371,26 +375,52 @@ void loop()
 //    }
 //  }
 
-  //    //FRONT LEFT WARMER CONTROL
-   if (!LFPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && (!gpio_get_level(FRONT_LEFT_Element_Firing_Pin)))
+//  //    //FRONT LEFT WARMER CONTROL
+//   if (!LFPS) {
+//    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && (!gpio_get_level(FRONT_LEFT_Element_Firing_Pin)))
+//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+//    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && (gpio_get_level(FRONT_LEFT_Element_Firing_Pin))) {
+//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
+//      LFPS = true;
+//    }
+//  }
+
+//    //FRONT LEFT WARMER CONTROL
+if (!LFPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && !LFOn) {
       digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
-    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && (gpio_get_level(FRONT_LEFT_Element_Firing_Pin))) {
+      LFOn = true;
+    }  
+    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && LFOn) {
       digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
+      LFOn = false;
       LFPS = true;
     }
   }
 
- //    //FRONT RIGHT WARMER CONTROL
-   if (!RFPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && (!gpio_get_level(FRONT_RIGHT_Element_Firing_Pin)))
+//    //FRONT RIGHT WARMER CONTROL
+if (!RFPS) {
+    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && !RFOn) {
       digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && (gpio_get_level(FRONT_RIGHT_Element_Firing_Pin))) {
+      RFOn = true;
+    }  
+    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && RFOn) {
       digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+      RFOn = false;
       RFPS = true;
     }
   }
 
-      //micros() = micros();
+// //    //FRONT RIGHT WARMER CONTROL
+//   if (!RFPS) {
+//    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && (!gpio_get_level(FRONT_RIGHT_Element_Firing_Pin)))
+//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+//    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && (gpio_get_level(FRONT_RIGHT_Element_Firing_Pin))) {
+//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+//      RFPS = true;
+//    }
+//  }
+
+      //micros() = esp_timer_get_time();
 }
 //End of void loop
