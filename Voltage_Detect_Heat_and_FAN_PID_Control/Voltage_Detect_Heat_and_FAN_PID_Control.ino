@@ -350,62 +350,62 @@ void loop()
       Voltage_read = false;
       zero_cross_detected = false;   
     } 
-    hinge_left_firing_delay = maximum_firing_delay - hinge_left_PID_value;
+    hinge_left_firing_delay = 1000;//maximum_firing_delay - hinge_left_PID_value;
     hinge_right_firing_delay = maximum_firing_delay - hinge_right_PID_value;
     front_left_firing_delay = maximum_firing_delay - front_left_PID_value;
     front_right_firing_delay = maximum_firing_delay - front_right_PID_value;
 
 //    //HINGE LEFT WARMER CONTROL
 if (!LHPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && !LHOn) {
+    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > hinge_left_firing_delay) && !LHOn) {
       digitalWrite(HINGE_LEFT_Element_Firing_Pin,HIGH);
       LHOn = true;
     }  
-    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && LHOn) {
+    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > (hinge_left_firing_delay + 100)) && LHOn) {
       digitalWrite(HINGE_LEFT_Element_Firing_Pin,LOW);
       LHOn = false;
       LHPS = true;
     }
   }
 
-//    //HINGE RIGHT WARMER CONTROLL
-if (!RHPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && !RHOn) {
-      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
-      RHOn = true;
-    }  
-    if (((currentMicros - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && RHOn) {
-      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
-      RHOn = false;
-      RHPS = true;
-    }
-  }
-  
-//    //FRONT LEFT WARMER CONTROL
-if (!LFPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > front_left_firing_delay) && !LFOn) {
-      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
-      LFOn = true;
-    }  
-    if (((currentMicros - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && LFOn) {
-      digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
-      LFOn = false;
-      LFPS = true;
-    }
-  }
+////    //HINGE RIGHT WARMER CONTROLL
+//if (!RHPS) {
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > hinge_right_firing_delay) && !RHOn) {
+//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,HIGH);
+//      RHOn = true;
+//    }  
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > (hinge_right_firing_delay + 100)) && RHOn) {
+//      digitalWrite(HINGE_RIGHT_Element_Firing_Pin,LOW);
+//      RHOn = false;
+//      RHPS = true;
+//    }
+//  }
+//  
+////    //FRONT LEFT WARMER CONTROL
+//if (!LFPS) {
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > front_left_firing_delay) && !LFOn) {
+//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,HIGH);
+//      LFOn = true;
+//    }  
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > (front_left_firing_delay + 100)) && LFOn) {
+//      digitalWrite(FRONT_LEFT_Element_Firing_Pin,LOW);
+//      LFOn = false;
+//      LFPS = true;
+//    }
+//  }
 
-//    //FRONT RIGHT WARMER CONTROL
-if (!RFPS) {
-    if (((currentMicros - Last_Zero_Crossing_Time) > front_right_firing_delay) && !RFOn) {
-      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
-      RFOn = true;
-    }  
-    if (((currentMicros - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && RFOn) {
-      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
-      RFOn = false;
-      RFPS = true;
-    }
-  }
+////    //FRONT RIGHT WARMER CONTROL
+//if (!RFPS) {
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > front_right_firing_delay) && !RFOn) {
+//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,HIGH);
+//      RFOn = true;
+//    }  
+//    if (((esp_timer_get_time() - Last_Zero_Crossing_Time) > (front_right_firing_delay + 100)) && RFOn) {
+//      digitalWrite(FRONT_RIGHT_Element_Firing_Pin,LOW);
+//      RFOn = false;
+//      RFPS = true;
+//    }
+//  }
 
       //micros() = esp_timer_get_time();
 }
