@@ -53,7 +53,7 @@ const int maximum_firing_delay = 9000;
 //unsigned long previousMillis = 0; 
 //unsigned long currentMillis = 0;
 int temp_read_Delay = 500000;
-int setpoint = 100;
+int setpoint = 103;
 //int PID_dArrayIndex = 0; //we use this to keep track of where we are inserting into the array
 //double LastTwentyPID_d[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // An Array for the values
 unsigned long elapsedTime, Time, timePrev;
@@ -84,7 +84,7 @@ double prev_Front_Left_Temp; //record previous measurement
 double prev_Hinge_Right_Temp ; //record previous measurement
 
 //PID constants
-int kp =250;   float ki = 10;   int kd = 0;
+//int kp =1500;   float ki = 0;   int kd = 0.5;
 
 float Prev_PID_error; //used to store PID error for use in next calculation.
 
@@ -95,6 +95,8 @@ float hinge_left_previous_error = 0;
 float hinge_left_PID_value = 0;
 int hinge_left_firing_delay=0;
 int hinge_left_transition_state;
+int hinge_left_kp =1500;   float hinge_left_ki = 0;   int hinge_left_kd = 0.5;
+
 
 //HINGE LEFT PID constants
 int hinge_left_PID_p = 0;    float hinge_left_PID_i = 0;    int hinge_left_PID_d = 0;
@@ -106,6 +108,7 @@ float hinge_right_previous_error = 0;
 float hinge_right_PID_value = 0;
 int hinge_right_firing_delay = 0;
 int hinge_right_transition_state;
+int hinge_right_kp =1500;   float hinge_right_ki = 0;   int hinge_right_kd = 0.5;
 
 //HINGE RIGHT Warmer PID constants
 int hinge_right_PID_p = 0;    float hinge_right_PID_i = 0;    int hinge_right_PID_d = 0;
@@ -117,6 +120,7 @@ float front_right_previous_error = 0;
 float front_right_PID_value = 0;
 int front_right_firing_delay = 0;
 int front_right_transition_state;
+int front_right_kp = 1500;   float front_right_ki = 0;   int front_right_kd = 0.5;
 
 //FRONT RIGHT Warmer PID constants
 int front_right_PID_p = 0;    float front_right_PID_i = 0;    int front_right_PID_d = 0;
@@ -128,6 +132,7 @@ float front_left_previous_error = 0;
 float front_left_PID_value = 0;
 int front_left_firing_delay = 0;
 int front_left_transition_state;
+int front_left_kp =1500;   float front_left_ki = 0;   int front_left_kd = 0.5;
 
 //FRONT LEFT Warmer PID constants
 int front_left_PID_p = 0;    float front_left_PID_i = 0;    int front_left_PID_d = 0;
@@ -165,7 +170,7 @@ double GetTemp(int SDA_Pin, int SLC_pin) {
 }
 
 //PID value calculation
-float GetPidValue(int PID_p, float PID_i, int PID_d, float Prev_error, double CurrentTemp, double prevTemp) {
+float GetPidValue(int PID_p, float PID_i, int PID_d, float Prev_error, double CurrentTemp, double prevTemp, int kp, float ki, int kd) {
     float PID_error = 0; float PID_value = 0;
 
     PID_error = setpoint - CurrentTemp; //Calculate the pid ERROR
@@ -290,22 +295,22 @@ void loop()
     elapsedTime = (Time - timePrev) / 1000000;   
 
     //this is for PID calculation for Hinge LEFT Warmer
-    hinge_left_PID_value = GetPidValue(hinge_left_PID_p, hinge_left_PID_i, hinge_left_PID_d, hinge_left_previous_error, Hinge_Left_Temp, prev_Hinge_Left_Temp);
+    hinge_left_PID_value = GetPidValue(hinge_left_PID_p, hinge_left_PID_i, hinge_left_PID_d, hinge_left_previous_error, Hinge_Left_Temp, prev_Hinge_Left_Temp, hinge_left_kp, hinge_left_ki, hinge_left_kd);
     hinge_left_previous_error = Prev_PID_error;
      // End of Hinge LEFT Warmer
 
     //NEW.. this is for PID calculation for Hinge Right Warmer             
-    hinge_right_PID_value = GetPidValue(hinge_right_PID_p, hinge_right_PID_i, hinge_right_PID_d, hinge_right_previous_error, Hinge_Right_Temp, prev_Hinge_Right_Temp);//Calculate total PID value
+    hinge_right_PID_value = GetPidValue(hinge_right_PID_p, hinge_right_PID_i, hinge_right_PID_d, hinge_right_previous_error, Hinge_Right_Temp, prev_Hinge_Right_Temp, hinge_right_kp, hinge_right_ki, hinge_right_kd);//Calculate total PID value
     hinge_right_previous_error = Prev_PID_error;          //integral constant will only affect errors below 30ºC
     // End of Hinge Right Warmer
 
     //NEW.. this is for PID calculation for Front Right Warmer
-    front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, Front_Right_Temp, prev_Front_Right_Temp);
+    front_right_PID_value = GetPidValue(front_right_PID_p, front_right_PID_i, front_right_PID_d, front_right_previous_error, Front_Right_Temp, prev_Front_Right_Temp, front_right_kp, front_right_ki, front_right_kd);
     front_right_previous_error = Prev_PID_error;
     // End of Front Right Warmer
 
     //NEW.. this is for PID calculation for Front Left Warmer    
-     front_left_PID_value = GetPidValue(front_left_PID_p, front_left_PID_i, front_left_PID_d, front_left_previous_error, Front_Left_Temp, prev_Front_Left_Temp);
+     front_left_PID_value = GetPidValue(front_left_PID_p, front_left_PID_i, front_left_PID_d, front_left_previous_error, Front_Left_Temp, prev_Front_Left_Temp, front_left_kp, front_left_ki, front_left_kd);
      front_left_previous_error = Prev_PID_error;
     // End of Front Right Warmer
     
